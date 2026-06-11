@@ -1,0 +1,1613 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hệ Thống Tập Luyện — Buy Sell Signal v3</title>
+<style>
+  :root {
+    --bg: #0a0e17;
+    --bg2: #111827;
+    --bg3: #1a2235;
+    --border: #1e2d45;
+    --accent-blue: #3b82f6;
+    --accent-green: #10b981;
+    --accent-red: #ef4444;
+    --accent-yellow: #f59e0b;
+    --accent-purple: #8b5cf6;
+    --accent-cyan: #06b6d4;
+    --text: #e2e8f0;
+    --text-muted: #64748b;
+    --text-dim: #94a3b8;
+    --font-mono: 'Courier New', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 28px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .header-logo {
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+  .header h1 { font-size: 18px; font-weight: 700; color: var(--text); }
+  .header p { font-size: 12px; color: var(--text-muted); }
+  .header-badge {
+    margin-left: auto;
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #fff; font-size: 11px; font-weight: 700;
+    padding: 4px 10px; border-radius: 99px;
+    letter-spacing: 1px;
+  }
+
+  /* ── NAV ── */
+  .nav {
+    display: flex; gap: 4px;
+    padding: 12px 28px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+  }
+  .nav-btn {
+    padding: 7px 16px; border-radius: 8px;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer; border: none;
+    background: transparent; color: var(--text-muted);
+    white-space: nowrap; transition: all 0.2s;
+  }
+  .nav-btn:hover { background: var(--bg3); color: var(--text); }
+  .nav-btn.active {
+    background: var(--accent-blue);
+    color: #fff;
+  }
+
+  /* ── MAIN ── */
+  .main { padding: 24px 28px; max-width: 1200px; margin: 0 auto; }
+
+  /* ── SECTIONS ── */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+  }
+  .card-title {
+    font-size: 15px; font-weight: 700;
+    color: var(--text); margin-bottom: 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card-title span { font-size: 18px; }
+
+  /* ── GRID ── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  @media(max-width: 768px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+  /* ── CHECKLIST ── */
+  .check-group { margin-bottom: 18px; }
+  .check-group-title {
+    font-size: 12px; font-weight: 700;
+    color: var(--text-muted); letter-spacing: 1.5px;
+    text-transform: uppercase; margin-bottom: 10px;
+    padding-left: 4px;
+  }
+  .check-item {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 10px 14px; border-radius: 10px;
+    border: 1px solid transparent;
+    cursor: pointer; transition: all 0.2s;
+    margin-bottom: 6px;
+    background: var(--bg3);
+  }
+  .check-item:hover { border-color: var(--border); }
+  .check-item.checked { background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.3); }
+  .check-item.checked .check-box { background: var(--accent-green); border-color: var(--accent-green); }
+  .check-item.checked .check-box::after { opacity: 1; }
+  .check-item.critical { }
+  .check-item.critical .check-label em {
+    background: rgba(239,68,68,0.15);
+    color: var(--accent-red);
+    font-style: normal; font-size: 10px; font-weight: 700;
+    padding: 2px 6px; border-radius: 4px; margin-left: 6px;
+  }
+  .check-box {
+    width: 20px; height: 20px; min-width: 20px;
+    border: 2px solid var(--border);
+    border-radius: 5px; position: relative;
+    transition: all 0.2s;
+  }
+  .check-box::after {
+    content: '✓'; position: absolute;
+    top: 50%; left: 50%; transform: translate(-50%,-50%);
+    color: #fff; font-size: 12px; font-weight: 700;
+    opacity: 0; transition: opacity 0.2s;
+  }
+  .check-label { flex: 1; }
+  .check-label strong { font-size: 14px; display: block; margin-bottom: 2px; }
+  .check-label p { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+
+  /* ── SCORE BAR ── */
+  .score-bar-wrap { margin: 16px 0; }
+  .score-bar-label {
+    display: flex; justify-content: space-between;
+    font-size: 13px; color: var(--text-dim); margin-bottom: 6px;
+  }
+  .score-val { font-weight: 700; font-size: 20px; color: var(--text); }
+  .score-bar {
+    height: 8px; border-radius: 99px;
+    background: var(--border); overflow: hidden;
+  }
+  .score-bar-fill {
+    height: 100%; border-radius: 99px;
+    transition: width 0.5s ease, background 0.5s;
+  }
+  .verdict {
+    padding: 14px 18px; border-radius: 10px;
+    font-size: 14px; font-weight: 700;
+    margin-top: 12px; text-align: center;
+    letter-spacing: 0.5px;
+  }
+  .verdict.go { background: rgba(16,185,129,0.15); color: var(--accent-green); border: 1px solid rgba(16,185,129,0.3); }
+  .verdict.warn { background: rgba(245,158,11,0.15); color: var(--accent-yellow); border: 1px solid rgba(245,158,11,0.3); }
+  .verdict.no { background: rgba(239,68,68,0.12); color: var(--accent-red); border: 1px solid rgba(239,68,68,0.25); }
+
+  /* ── MINI CHART (SVG) ── */
+  .mini-chart-wrap {
+    background: #070d1a;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px; overflow: hidden;
+    margin-bottom: 14px;
+  }
+  .mini-chart-wrap svg { width: 100%; display: block; }
+
+  /* ── EXAMPLE CARD ── */
+  .example-nav {
+    display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;
+  }
+  .ex-btn {
+    padding: 8px 16px; border-radius: 8px; cursor: pointer;
+    border: 1px solid var(--border);
+    font-size: 13px; font-weight: 600;
+    transition: all 0.2s; background: var(--bg3); color: var(--text-dim);
+  }
+  .ex-btn:hover { border-color: var(--accent-blue); color: var(--text); }
+  .ex-btn.active { background: var(--accent-blue); border-color: var(--accent-blue); color: #fff; }
+  .ex-btn.sell-ex { }
+  .ex-btn.sell-ex.active { background: var(--accent-red); border-color: var(--accent-red); }
+
+  .example-content { display: none; }
+  .example-content.active { display: block; }
+
+  /* ── CONDITION BADGE ── */
+  .cond-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+  .cond-badge {
+    padding: 5px 12px; border-radius: 99px;
+    font-size: 12px; font-weight: 700;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .cond-ok { background: rgba(16,185,129,0.15); color: var(--accent-green); border: 1px solid rgba(16,185,129,0.35); }
+  .cond-no { background: rgba(239,68,68,0.12); color: var(--accent-red); border: 1px solid rgba(239,68,68,0.3); }
+  .cond-warn { background: rgba(245,158,11,0.12); color: var(--accent-yellow); border: 1px solid rgba(245,158,11,0.3); }
+
+  /* ── RESULT TAG ── */
+  .result-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 14px; border-radius: 99px;
+    font-size: 13px; font-weight: 800;
+    letter-spacing: 0.5px;
+  }
+  .win { background: rgba(16,185,129,0.2); color: var(--accent-green); }
+  .lose { background: rgba(239,68,68,0.2); color: var(--accent-red); }
+  .skip { background: rgba(100,116,139,0.2); color: var(--text-muted); }
+
+  /* ── EXIT TABLE ── */
+  .exit-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .exit-table th {
+    background: var(--bg3); color: var(--text-muted);
+    font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+    padding: 10px 14px; text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  .exit-table td {
+    padding: 11px 14px; border-bottom: 1px solid rgba(30,45,69,0.6);
+    vertical-align: top; line-height: 1.6;
+  }
+  .exit-table tr:last-child td { border-bottom: none; }
+  .exit-table .signal-cell { font-weight: 700; font-size: 13px; }
+
+  /* ── PILL ── */
+  .pill {
+    display: inline-block; padding: 2px 9px; border-radius: 99px;
+    font-size: 11px; font-weight: 700;
+  }
+  .pill-blue { background: rgba(59,130,246,0.15); color: var(--accent-blue); }
+  .pill-green { background: rgba(16,185,129,0.15); color: var(--accent-green); }
+  .pill-red { background: rgba(239,68,68,0.15); color: var(--accent-red); }
+  .pill-yellow { background: rgba(245,158,11,0.15); color: var(--accent-yellow); }
+  .pill-purple { background: rgba(139,92,246,0.15); color: var(--accent-purple); }
+
+  /* ── RULE CARD ── */
+  .rule-card {
+    background: var(--bg3);
+    border-left: 3px solid var(--accent-blue);
+    border-radius: 0 10px 10px 0;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    font-size: 13px; line-height: 1.7;
+  }
+  .rule-card.red { border-left-color: var(--accent-red); }
+  .rule-card.green { border-left-color: var(--accent-green); }
+  .rule-card.yellow { border-left-color: var(--accent-yellow); }
+  .rule-card.purple { border-left-color: var(--accent-purple); }
+  .rule-card strong { color: var(--text); display: block; margin-bottom: 4px; font-size: 14px; }
+
+  /* ── QUICK STATS ── */
+  .stat-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+  .stat-box {
+    flex: 1; min-width: 100px;
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 14px;
+    text-align: center;
+  }
+  .stat-box .val { font-size: 22px; font-weight: 800; }
+  .stat-box .lbl { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+  /* ── PROGRESS RING ── */
+  .progress-ring-wrap {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; padding: 16px 0;
+  }
+  .ring-label { font-size: 13px; color: var(--text-muted); margin-top: 8px; }
+
+  /* ── RESET ── */
+  .reset-btn {
+    background: transparent; border: 1px solid var(--border);
+    color: var(--text-dim); padding: 8px 16px; border-radius: 8px;
+    cursor: pointer; font-size: 13px; transition: all 0.2s;
+    margin-top: 10px;
+  }
+  .reset-btn:hover { border-color: var(--accent-red); color: var(--accent-red); }
+
+  /* ── STEP LIST ── */
+  .step-list { counter-reset: step; list-style: none; padding: 0; }
+  .step-list li {
+    counter-increment: step;
+    display: flex; gap: 14px;
+    padding: 12px 0; border-bottom: 1px solid rgba(30,45,69,0.5);
+    font-size: 13px; line-height: 1.6; align-items: flex-start;
+  }
+  .step-list li:last-child { border-bottom: none; }
+  .step-list li::before {
+    content: counter(step);
+    min-width: 24px; height: 24px;
+    background: var(--accent-blue); color: #fff;
+    border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-size: 12px; font-weight: 800;
+    margin-top: 1px;
+  }
+
+  /* ── CANDLE SQUEEZE VIZ ── */
+  .squeeze-demo {
+    display: flex; align-items: flex-end; gap: 3px;
+    padding: 16px 12px 8px;
+    background: #050c18; border-radius: 10px;
+    height: 100px; margin: 10px 0;
+    position: relative;
+  }
+  .candle { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; position: relative; }
+  .wick { width: 1px; background: #4a5568; }
+  .body { width: 8px; border-radius: 2px; }
+  .squeeze-label {
+    position: absolute; top: 6px; left: 12px;
+    font-size: 10px; color: var(--text-muted);
+    font-family: var(--font-mono);
+  }
+
+  /* ── TOOLTIP ── */
+  [data-tip] { position: relative; cursor: help; }
+  [data-tip]::after {
+    content: attr(data-tip);
+    position: absolute; bottom: calc(100% + 6px); left: 50%;
+    transform: translateX(-50%);
+    background: #1e293b; color: var(--text);
+    font-size: 11px; padding: 6px 10px; border-radius: 6px;
+    white-space: nowrap; pointer-events: none;
+    opacity: 0; transition: opacity 0.2s;
+    border: 1px solid var(--border); z-index: 9999;
+  }
+  [data-tip]:hover::after { opacity: 1; }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  .divider { height: 1px; background: var(--border); margin: 20px 0; }
+  .text-green { color: var(--accent-green); }
+  .text-red { color: var(--accent-red); }
+  .text-yellow { color: var(--accent-yellow); }
+  .text-blue { color: var(--accent-blue); }
+  .text-muted { color: var(--text-muted); }
+  .fw7 { font-weight: 700; }
+  .mt8 { margin-top: 8px; }
+  .mb0 { margin-bottom: 0; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-logo">📊</div>
+  <div>
+    <h1>Buy Sell Signal v3 — Hệ Thống Tập Luyện</h1>
+    <p>Checklist · Ví dụ thực chiến · Kiểm soát rủi ro · Thoát lệnh sớm</p>
+  </div>
+  <div class="header-badge">THỰC CHIẾN</div>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <button class="nav-btn active" onclick="showSection('checklist')">✅ Checklist Vào Lệnh</button>
+  <button class="nav-btn" onclick="showSection('examples')">📈 Ví Dụ Thực Chiến</button>
+  <button class="nav-btn" onclick="showSection('exit')">🚪 Thoát Lệnh Sớm</button>
+  <button class="nav-btn" onclick="showSection('squeeze')">🔥 Vùng Nén Nến</button>
+  <button class="nav-btn" onclick="showSection('rules')">📋 Bộ Luật Cốt Lõi</button>
+  <button class="nav-btn" onclick="showSection('quiz')">🎯 Luyện Tập</button>
+</div>
+
+<div class="main">
+
+<!-- ══════════════════════════════ SECTION 1: CHECKLIST ══════════════════════════════ -->
+<div id="section-checklist" class="section active">
+  <div class="grid-2">
+    <div>
+      <div class="card">
+        <div class="card-title"><span>🟢</span> Checklist BUY — Trước Khi Vào Lệnh</div>
+        
+        <div class="check-group">
+          <div class="check-group-title">Xu hướng chính</div>
+          <div class="check-item critical" onclick="toggleCheck(this,'buy')">
+            <div class="check-box"></div>
+            <div class="check-label">
+              <strong>Giá trên EMA 200 <em>BẮT BUỘC</em></strong>
+              <p>Close > EMA200 = đang trong uptrend dài hạn. Mua ngược EMA200 tỉ lệ thắng rất thấp.</p>
+            </div>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'buy')">
+            <div class="check-box"></div>
+            <div class="check-label">
+              <strong>EMA 5 cắt lên trên EMA 13</strong>
+              <p>Tín hiệu BUY của indicator. Xác nhận bằng nến tăng đóng cửa (confirmCandle = ON).</p>
+            </div>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'buy')">
+            <div class="check-box"></div>
+            <div class="check-label">
+              <strong>Cả 3 EMA xếp thứ tự: EMA5 > EMA13 > EMA200</strong>
+              <p>Ba EMA song song hướng lên → xu hướng đồng thuận. Điểm mua mạnh nhất.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="check-group">
+          <div class="check-group-title">Vùng giá</div>
+          <div class="check-item critical" onclick="toggleCheck(this,'buy')">
+            <div class="check-box"></div>
+            <div class="check-label">
+              <strong>Giá bounced từ vùng Support Zone <em>BẮT BUỘC</em></strong>
+              <p>Giá chạm vùng hỗ trợ vàng cam và bật lên. Mua giữa trời không có vùng = rủi ro cao.</p>
+            </div>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'buy')">
+            <div class="check-box"></div>
+            <div class="check-label">
+              <strong>Không đang kẹt dưới vùng Resistance Zone</strong>
+              <p>Kháng cự đỏ ngay phía trên = trần giá gần, không đủ dư địa để chạy đến TP.</p>
+            </div>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'buy')">
+            <div class="check-box"></div>
+            <div class="check-label">
+              <strong>Trendline Support giữ vững (đường cyan)</strong>
+              <p>Giá bounce từ đường trendline đáy. Nếu giá cắt xuống trendline → bỏ lệnh.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="check-group">
+          <div class="check-group-title">Xác nhận Momentum</div>
+          <div class="check-item" onclick="toggleCheck(this,'buy')">
+            <div class="check-box"></div>
+            <div class="check-label">
+              <strong>RSI &gt; 50 và không quá mua (&lt; 65)</strong>
+              <p>RSI 50–65 = vùng mua lý tưởng, đủ lực tăng mà chưa bão hòa. RSI &gt; 70 tránh mua đuổi.</p>
+            </div>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'buy')">
+            <div class="check-box"></div>
+            <div class="check-label">
+              <strong>RSI vừa thoát vùng oversold (30→50)</strong>
+              <p>RSI phục hồi từ &lt;30 lên trên 50 = tín hiệu đảo chiều tăng mạnh, kết hợp BUY signal.</p>
+            </div>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'buy')">
+            <div class="check-box"></div>
+            <div class="check-label">
+              <strong>Có vùng nén nến (squeeze) trước tín hiệu</strong>
+              <p>Nến nhỏ dần trong 3–6 nến liên tiếp → năng lượng tích lũy, BUY signal = breakout bùng nổ.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+        <div class="score-bar-wrap">
+          <div class="score-bar-label">
+            <span>Điểm xác nhận BUY</span>
+            <span class="score-val" id="buy-score">0/8</span>
+          </div>
+          <div class="score-bar"><div class="score-bar-fill" id="buy-bar" style="width:0%;background:#ef4444"></div></div>
+        </div>
+        <div class="verdict no" id="buy-verdict">⚠️ Chưa đủ điều kiện — Không vào lệnh</div>
+        <button class="reset-btn" onclick="resetChecklist('buy')">↺ Reset Checklist</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="card-title"><span>🔴</span> Checklist SELL — Trước Khi Vào Lệnh</div>
+        
+        <div class="check-group">
+          <div class="check-group-title">Xu hướng chính</div>
+          <div class="check-item critical" onclick="toggleCheck(this,'sell')">
+            <div class="check-box"></div>
+            <div class="check-label">
+              <strong>Giá dưới EMA 200 <em>BẮT BUỘC</em></strong>
+              <p>Close &lt; EMA200 = đang trong downtrend dài hạn. Short ngược EMA200 tỉ lệ thất bại cao.</p>
+            </div>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'sell')">
+            <div class="check-box"></div>
+            <div class="check-label">
+              <strong>EMA 5 cắt xuống dưới EMA 13</strong>
+              <p>Tín hiệu SELL của indicator. Nến giảm đóng cửa xác nhận (bearish candle).</p>
+            </div>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'sell')">
+            <div class="check-box"></div>
+            <div class="check-label">
+              <strong>Cả 3 EMA xếp thứ tự: EMA5 &lt; EMA13 &lt; EMA200</strong>
+              <p>Ba EMA hướng xuống đồng thuận → cú short mạnh nhất, ít bị pullback.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="check-group">
+          <div class="check-group-title">Vùng giá</div>
+          <div class="check-item critical" onclick="toggleCheck(this,'sell')">
+            <div class="check-box"></div>
+            <div class="check-label">
+              <strong>Giá reject từ vùng Resistance Zone <em>BẮT BUỘC</em></strong>
+              <p>Giá chạm vùng kháng cự đỏ và bị đẩy xuống. Bán đúng vùng = SL gọn, TP rộng.</p>
+            </div>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'sell')">
+            <div class="check-box"></div>
+            <div class="check-label">
+              <strong>Không đang đứng trên vùng Support Zone</strong>
+              <p>Hỗ trợ ngay phía dưới = sàn giá gần, trade không đủ room. Đợi giá phá support.</p>
+            </div>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'sell')">
+            <div class="check-box"></div>
+            <div class="check-label">
+              <strong>Trendline Resistance bị giữ (đường đỏ)</strong>
+              <p>Giá test trendline đỉnh nhưng không phá được → xác nhận áp lực bán vẫn còn.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="check-group">
+          <div class="check-group-title">Xác nhận Momentum</div>
+          <div class="check-item" onclick="toggleCheck(this,'sell')">
+            <div class="check-box"></div>
+            <div class="check-label">
+              <strong>RSI &lt; 50 và không quá bán (&gt; 35)</strong>
+              <p>RSI 35–50 = vùng short lý tưởng. RSI &lt; 30 không short thêm, có thể reversal.</p>
+            </div>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'sell')">
+            <div class="check-box"></div>
+            <div class="check-label">
+              <strong>RSI vừa thoát overbought (70→50)</strong>
+              <p>RSI rớt từ &gt;70 xuống 50 = momentum giảm xác nhận, kết hợp SELL signal rất mạnh.</p>
+            </div>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'sell')">
+            <div class="check-box"></div>
+            <div class="check-label">
+              <strong>Có vùng nén nến (squeeze) trước tín hiệu</strong>
+              <p>Chuỗi nến nhỏ sát nhau → tích lũy áp lực bán. SELL signal = breakdown mạnh.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+        <div class="score-bar-wrap">
+          <div class="score-bar-label">
+            <span>Điểm xác nhận SELL</span>
+            <span class="score-val" id="sell-score">0/8</span>
+          </div>
+          <div class="score-bar"><div class="score-bar-fill" id="sell-bar" style="width:0%;background:#ef4444"></div></div>
+        </div>
+        <div class="verdict no" id="sell-verdict">⚠️ Chưa đủ điều kiện — Không vào lệnh</div>
+        <button class="reset-btn" onclick="resetChecklist('sell')">↺ Reset Checklist</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUICK GUIDE -->
+  <div class="card">
+    <div class="card-title"><span>💡</span> Nguyên Tắc Vàng — Ghi Nhớ Ngay</div>
+    <div class="grid-3">
+      <div class="rule-card green">
+        <strong>✅ Tín hiệu + Vùng giá = Vào lệnh</strong>
+        BUY/SELL signal chỉ là điểm khởi đầu. Cần giá đang ở <b>vùng hỗ trợ/kháng cự</b> để có SL gọn và TP xa.
+      </div>
+      <div class="rule-card yellow">
+        <strong>⚡ RSI xác nhận momentum</strong>
+        RSI không cần chính xác, chỉ cần đúng hướng. BUY khi RSI tăng qua 50. SELL khi RSI giảm qua 50.
+      </div>
+      <div class="rule-card purple">
+        <strong>🎯 EMA200 là bộ lọc tối thượng</strong>
+        Mua trên EMA200. Bán dưới EMA200. Vi phạm quy tắc này = chấp nhận tỉ lệ thắng dưới 40%.
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════ SECTION 2: EXAMPLES ══════════════════════════════ -->
+<div id="section-examples" class="section">
+  <div class="card mb0">
+    <div class="card-title"><span>📈</span> Ví Dụ Thực Chiến — 6 Tình Huống</div>
+    <div class="example-nav">
+      <button class="ex-btn active" onclick="showExample('ex1',this)">📗 BUY #1 — Chuẩn mực</button>
+      <button class="ex-btn" onclick="showExample('ex2',this)">📗 BUY #2 — Squeeze</button>
+      <button class="ex-btn" onclick="showExample('ex3',this)">📗 BUY #3 — False signal</button>
+      <button class="ex-btn sell-ex" onclick="showExample('ex4',this)">📕 SELL #1 — Chuẩn mực</button>
+      <button class="ex-btn sell-ex" onclick="showExample('ex5',this)">📕 SELL #2 — Resistance rõ</button>
+      <button class="ex-btn sell-ex" onclick="showExample('ex6',this)">📕 SELL #3 — Skip đúng</button>
+    </div>
+  </div>
+
+  <!-- EX 1 -->
+  <div id="ex1" class="example-content active">
+    <div class="grid-2">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <div class="card-title mb0"><span>📗</span> BUY #1 — Tín Hiệu Chuẩn Mực</div>
+          <span class="result-tag win">✅ WIN +3R</span>
+        </div>
+        <!-- Mini chart BUY 1 -->
+        <div class="mini-chart-wrap">
+          <svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+            <!-- EMA200 -->
+            <path d="M0,90 Q100,88 200,85 Q300,82 420,80" stroke="#3b82f6" stroke-width="1.5" fill="none" opacity="0.7"/>
+            <text x="8" y="88" fill="#3b82f6" font-size="9" opacity="0.8">EMA200</text>
+            <!-- EMA13 -->
+            <path d="M0,105 Q80,100 160,92 Q240,82 320,72 Q370,66 420,62" stroke="#f97316" stroke-width="1.2" fill="none" opacity="0.9"/>
+            <text x="8" y="103" fill="#f97316" font-size="9" opacity="0.8">EMA13</text>
+            <!-- EMA5 -->
+            <path d="M0,110 Q60,105 120,95 Q180,84 240,70 Q320,56 420,50" stroke="#22c55e" stroke-width="1.2" fill="none" opacity="0.9"/>
+            <text x="8" y="108" fill="#22c55e" font-size="9" opacity="0.8">EMA5</text>
+            <!-- Support Zone -->
+            <rect x="0" y="95" width="200" height="12" fill="#f59e0b" opacity="0.12"/>
+            <text x="8" y="107" fill="#f59e0b" font-size="8" opacity="0.7">SUPPORT ZONE</text>
+            <!-- Candles before signal -->
+            <rect x="30" y="100" width="6" height="12" fill="#ef4444" rx="1"/>
+            <line x1="33" y1="97" x2="33" y2="114" stroke="#ef4444" stroke-width="1"/>
+            <rect x="42" y="98" width="6" height="10" fill="#ef4444" rx="1"/>
+            <line x1="45" y1="95" x2="45" y2="110" stroke="#ef4444" stroke-width="1"/>
+            <rect x="54" y="100" width="6" height="8" fill="#ef4444" rx="1"/>
+            <line x1="57" y1="98" x2="57" y2="110" stroke="#ef4444" stroke-width="1"/>
+            <!-- Signal candle (BUY) -->
+            <rect x="70" y="88" width="8" height="16" fill="#22c55e" rx="1"/>
+            <line x1="74" y1="84" x2="74" y2="106" stroke="#22c55e" stroke-width="1.2"/>
+            <text x="66" y="130" fill="#22c55e" font-size="9" font-weight="bold">BUY</text>
+            <line x1="74" y1="132" x2="74" y2="106" stroke="#22c55e" stroke-width="1" stroke-dasharray="2,2"/>
+            <!-- Following candles going up -->
+            <rect x="84" y="80" width="7" height="14" fill="#22c55e" rx="1"/>
+            <rect x="97" y="72" width="7" height="14" fill="#22c55e" rx="1"/>
+            <rect x="110" y="64" width="7" height="13" fill="#22c55e" rx="1"/>
+            <rect x="123" y="68" width="7" height="10" fill="#ef4444" rx="1"/>
+            <rect x="136" y="60" width="7" height="14" fill="#22c55e" rx="1"/>
+            <rect x="149" y="52" width="7" height="12" fill="#22c55e" rx="1"/>
+            <!-- SL line -->
+            <line x1="66" y1="108" x2="200" y2="108" stroke="#ef4444" stroke-width="1" stroke-dasharray="3,2" opacity="0.6"/>
+            <text x="202" y="111" fill="#ef4444" font-size="9">SL</text>
+            <!-- TP line -->
+            <line x1="66" y1="44" x2="200" y2="44" stroke="#22c55e" stroke-width="1" stroke-dasharray="3,2" opacity="0.6"/>
+            <text x="202" y="47" fill="#22c55e" font-size="9">TP</text>
+            <!-- Entry line -->
+            <line x1="66" y1="88" x2="200" y2="88" stroke="#fff" stroke-width="0.8" stroke-dasharray="2,3" opacity="0.4"/>
+            <text x="202" y="91" fill="#888" font-size="9">Entry</text>
+            <!-- RSI indicator (bottom) -->
+            <text x="8" y="150" fill="#94a3b8" font-size="9">RSI: 42 → 54 → 61</text>
+            <rect x="80" y="144" width="40" height="5" rx="2" fill="#374151"/>
+            <rect x="80" y="144" width="25" height="5" rx="2" fill="#22c55e" opacity="0.7"/>
+            <text x="126" y="149" fill="#22c55e" font-size="8">+RSI↑</text>
+          </svg>
+        </div>
+        <div class="cond-row">
+          <span class="cond-badge cond-ok">✓ Giá trên EMA200</span>
+          <span class="cond-badge cond-ok">✓ EMA5 > EMA13</span>
+          <span class="cond-badge cond-ok">✓ Support zone rõ</span>
+          <span class="cond-badge cond-ok">✓ RSI 54 (>50)</span>
+          <span class="cond-badge cond-ok">✓ BUY signal + nến tăng</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span>🧠</span> Phân Tích Từng Bước</div>
+        <ol class="step-list">
+          <li><b>Bối cảnh:</b> Giá đang trong uptrend dài hạn, trên EMA200 (xanh). Pullback nhẹ về vùng support vàng.</li>
+          <li><b>Signal xuất hiện:</b> EMA5 cắt lên EMA13, nến tăng xanh đóng cửa → indicator bật nhãn <span class="pill pill-green">BUY</span></li>
+          <li><b>Kiểm tra RSI:</b> RSI tăng từ 42 → 54, vừa vượt 50 → momentum đang chuyển sang tích cực. ✅</li>
+          <li><b>Vùng giá:</b> Nến BUY bounce ngay từ mép trên vùng support zone → SL đặt dưới vùng, gọn chỉ 0.5×ATR. ✅</li>
+          <li><b>Vào lệnh:</b> Entry = close nến BUY. SL = low − 0.5ATR. TP = Entry + 3×risk. Tất cả điều kiện đủ → <span class="pill pill-green">VÀO LỆNH</span></li>
+          <li><b>Kết quả:</b> Giá tăng liên tục 6 nến, đạt TP3 → <b class="text-green">WIN +3R</b>. Không bị SL lần nào.</li>
+        </ol>
+        <div class="rule-card green mt8">
+          <strong>📌 Bài học</strong>
+          Đây là setup BUY lý tưởng nhất: signal + support zone + EMA200 ủng hộ + RSI tăng tốc. Khi đủ 5/8 điều kiện → vào với full size.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EX 2 -->
+  <div id="ex2" class="example-content">
+    <div class="grid-2">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <div class="card-title mb0"><span>📗</span> BUY #2 — Sau Vùng Nén Nến</div>
+          <span class="result-tag win">✅ WIN +2.5R</span>
+        </div>
+        <div class="mini-chart-wrap">
+          <svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+            <!-- EMA200 -->
+            <path d="M0,120 Q200,118 420,116" stroke="#3b82f6" stroke-width="1.5" fill="none" opacity="0.7"/>
+            <!-- EMA13 -->
+            <path d="M0,100 Q100,98 200,95 Q300,88 420,78" stroke="#f97316" stroke-width="1.2" fill="none"/>
+            <!-- EMA5 -->
+            <path d="M0,102 Q80,100 160,96 Q200,92 250,85 Q300,76 420,65" stroke="#22c55e" stroke-width="1.2" fill="none"/>
+            <!-- BB bands -->
+            <path d="M30,75 Q80,73 130,72" stroke="#8b5cf6" stroke-width="0.8" fill="none" stroke-dasharray="2,2" opacity="0.6"/>
+            <path d="M30,100 Q80,100 130,100" stroke="#8b5cf6" stroke-width="0.8" fill="none" stroke-dasharray="2,2" opacity="0.6"/>
+            <text x="8" y="80" fill="#8b5cf6" font-size="8" opacity="0.8">Bollinger tụ lại</text>
+            <!-- Squeeze candles: small bodies -->
+            <rect x="30" y="87" width="5" height="5" fill="#ef4444" rx="1"/><line x1="32" y1="85" x2="32" y2="93" stroke="#ef4444"/>
+            <rect x="40" y="88" width="5" height="4" fill="#22c55e" rx="1"/><line x1="42" y1="87" x2="42" y2="93" stroke="#22c55e"/>
+            <rect x="50" y="87" width="5" height="5" fill="#ef4444" rx="1"/><line x1="52" y1="86" x2="52" y2="93" stroke="#ef4444"/>
+            <rect x="60" y="88" width="5" height="4" fill="#22c55e" rx="1"/><line x1="62" y1="87" x2="62" y2="93" stroke="#22c55e"/>
+            <rect x="70" y="88" width="5" height="5" fill="#22c55e" rx="1"/><line x1="72" y1="87" x2="72" y2="94" stroke="#22c55e"/>
+            <text x="35" y="145" fill="#f59e0b" font-size="9">← Vùng NÉN (squeeze)</text>
+            <!-- Breakout BUY candle -->
+            <rect x="84" y="70" width="9" height="22" fill="#22c55e" rx="1.5"/>
+            <line x1="88" y1="66" x2="88" y2="94" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="80" y="130" fill="#22c55e" font-size="9" font-weight="bold">BUY</text>
+            <!-- Following candles -->
+            <rect x="99" y="62" width="7" height="15" fill="#22c55e" rx="1"/>
+            <rect x="112" y="56" width="7" height="12" fill="#22c55e" rx="1"/>
+            <rect x="125" y="60" width="7" height="9" fill="#ef4444" rx="1"/>
+            <rect x="138" y="52" width="7" height="14" fill="#22c55e" rx="1"/>
+            <!-- SL/TP -->
+            <line x1="80" y1="96" x2="230" y2="96" stroke="#ef4444" stroke-width="1" stroke-dasharray="3,2" opacity="0.5"/>
+            <text x="232" y="99" fill="#ef4444" font-size="9">SL</text>
+            <line x1="80" y1="45" x2="230" y2="45" stroke="#22c55e" stroke-width="1" stroke-dasharray="3,2" opacity="0.5"/>
+            <text x="232" y="48" fill="#22c55e" font-size="9">TP</text>
+            <text x="8" y="152" fill="#94a3b8" font-size="9">RSI: 48 → 52 → 59  |  Nến nén 5 bars → bùng phát</text>
+          </svg>
+        </div>
+        <div class="cond-row">
+          <span class="cond-badge cond-ok">✓ Trên EMA200</span>
+          <span class="cond-badge cond-ok">✓ Squeeze 5 nến</span>
+          <span class="cond-badge cond-ok">✓ Breakout mạnh</span>
+          <span class="cond-badge cond-ok">✓ RSI vượt 50</span>
+          <span class="cond-badge cond-warn">~ EMA chưa rõ gap</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span>🧠</span> Phân Tích Squeeze Breakout</div>
+        <ol class="step-list">
+          <li><b>Nhận diện squeeze:</b> 5 nến liên tiếp có thân nhỏ, bóng ngắn, dao động &lt; 0.3×ATR. Bollinger Bands tụ hẹp.</li>
+          <li><b>Chờ breakout:</b> Không vào trong vùng nén! Đợi nến phá ra bằng thân to, xác nhận hướng.</li>
+          <li><b>BUY signal xuất hiện:</b> Đúng lúc nến breakout lên → EMA5 vượt EMA13. Tín hiệu + breakout = rất mạnh.</li>
+          <li><b>Volume/momentum:</b> RSI nhảy từ 48 → 59 ngay lập tức → xác nhận lực mua thật. ✅</li>
+          <li><b>Entry điểm:</b> Vào ngay close nến breakout. SL dưới vùng nén (low squeeze). TP = 2.5×risk.</li>
+          <li><b>Kết quả:</b> Giá tăng nhanh vì áp lực tích lũy được giải phóng → <b class="text-green">WIN +2.5R</b></li>
+        </ol>
+        <div class="rule-card purple mt8">
+          <strong>📌 Bài học: Squeeze = năng lượng nén</strong>
+          Vùng nén nến là dấu hiệu thị trường đang "nạp năng lượng". BUY/SELL signal sau squeeze = đòn phóng mạnh, ít bị pullback, đạt TP nhanh.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EX 3 -->
+  <div id="ex3" class="example-content">
+    <div class="grid-2">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <div class="card-title mb0"><span>📗</span> BUY #3 — Tín Hiệu Giả (Bỏ Qua)</div>
+          <span class="result-tag skip">⏭ SKIP — Đúng quyết định</span>
+        </div>
+        <div class="mini-chart-wrap">
+          <svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+            <!-- EMA200 -->
+            <path d="M0,60 Q200,62 420,64" stroke="#3b82f6" stroke-width="2" fill="none" opacity="0.9"/>
+            <text x="8" y="56" fill="#3b82f6" font-size="9">EMA200 (trên giá!)</text>
+            <!-- EMA13 -->
+            <path d="M0,90 Q100,92 200,95 Q300,98 420,100" stroke="#f97316" stroke-width="1.2" fill="none"/>
+            <!-- EMA5 -->
+            <path d="M0,95 Q100,96 160,98 Q220,94 280,90 Q340,86 420,84" stroke="#22c55e" stroke-width="1.2" fill="none"/>
+            <!-- Resistance zone -->
+            <rect x="60" y="55" width="300" height="14" fill="#ef4444" opacity="0.15"/>
+            <text x="150" y="53" fill="#ef4444" font-size="9">RESISTANCE ZONE</text>
+            <!-- Price candles below EMA200 -->
+            <rect x="30" y="88" width="6" height="10" fill="#ef4444" rx="1"/>
+            <rect x="42" y="90" width="6" height="9" fill="#ef4444" rx="1"/>
+            <rect x="54" y="92" width="6" height="8" fill="#ef4444" rx="1"/>
+            <!-- "BUY" signal (false) -->
+            <rect x="68" y="82" width="8" height="12" fill="#22c55e" rx="1"/>
+            <line x1="72" y1="78" x2="72" y2="96" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="64" y="130" fill="#22c55e" font-size="9" opacity="0.5">BUY?</text>
+            <!-- X mark -->
+            <circle cx="72" cy="135" r="8" fill="rgba(239,68,68,0.3)" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="68" y="139" fill="#ef4444" font-size="10" font-weight="bold">✕</text>
+            <!-- Price continues down after false signal -->
+            <rect x="82" y="84" width="7" height="10" fill="#22c55e" rx="1"/>
+            <rect x="95" y="86" width="7" height="12" fill="#ef4444" rx="1"/>
+            <rect x="108" y="92" width="7" height="14" fill="#ef4444" rx="1"/>
+            <rect x="121" y="98" width="7" height="16" fill="#ef4444" rx="1"/>
+            <rect x="134" y="105" width="7" height="14" fill="#ef4444" rx="1"/>
+            <!-- Would-be SL hit -->
+            <text x="160" y="118" fill="#ef4444" font-size="10" font-weight="bold">⚡ SL bị hit</text>
+            <!-- Arrow showing what would happen -->
+            <path d="M130,115 Q170,125 210,132" stroke="#ef4444" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+            <text x="8" y="152" fill="#94a3b8" font-size="9">RSI: 38 — dưới 50, chưa phục hồi  |  Giá dưới EMA200 ❌</text>
+          </svg>
+        </div>
+        <div class="cond-row">
+          <span class="cond-badge cond-no">✗ Giá DƯỚI EMA200</span>
+          <span class="cond-badge cond-no">✗ Kháng cự ngay trên</span>
+          <span class="cond-badge cond-no">✗ RSI 38 (&lt;50)</span>
+          <span class="cond-badge cond-ok">✓ EMA5 > EMA13</span>
+          <span class="cond-badge cond-warn">~ BUY signal có nhưng yếu</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span>🧠</span> Phân Tích Tín Hiệu Giả</div>
+        <ol class="step-list">
+          <li><b>Signal xuất hiện:</b> EMA5 vượt EMA13, indicator bật nhãn BUY. Tưởng vào được.</li>
+          <li><b>Nhưng nhìn EMA200:</b> Giá đang <b class="text-red">DƯỚI EMA200</b> → đang trong downtrend. Mua ngược xu hướng chính = sai cơ bản.</li>
+          <li><b>Kháng cự chặn đầu:</b> Ngay phía trên là Resistance Zone đỏ. Nếu vào, giá chạy được ít sẽ gặp trần.</li>
+          <li><b>RSI xác nhận yếu:</b> RSI 38, chưa vượt 50 → momentum vẫn negative. Không có lực mua thật.</li>
+          <li><b>Quyết định: BỎ QUA</b>. Không vào dù có signal. Đây là <span class="pill pill-yellow">tín hiệu nhiễu</span></li>
+          <li><b>Kết quả nếu vào:</b> Giá tiếp tục giảm 4 nến sau, SL bị hit → mất 1R. <b class="text-green">SKIP đúng = bảo toàn vốn.</b></li>
+        </ol>
+        <div class="rule-card red mt8">
+          <strong>📌 Bài học: Không vào lệnh cũng là kỹ năng</strong>
+          Bỏ qua 1 tín hiệu giả = tiết kiệm 1R. Sau 50 lệnh, những lần SKIP đúng tạo ra sự khác biệt lớn hơn những lệnh WIN.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EX 4 -->
+  <div id="ex4" class="example-content">
+    <div class="grid-2">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <div class="card-title mb0"><span>📕</span> SELL #1 — Tín Hiệu Chuẩn Mực</div>
+          <span class="result-tag win">✅ WIN +3R</span>
+        </div>
+        <div class="mini-chart-wrap">
+          <svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+            <!-- EMA200 -->
+            <path d="M0,50 Q200,52 420,54" stroke="#3b82f6" stroke-width="1.5" fill="none" opacity="0.7"/>
+            <text x="8" y="47" fill="#3b82f6" font-size="9">EMA200</text>
+            <!-- EMA13 -->
+            <path d="M0,65 Q100,68 200,75 Q300,84 420,96" stroke="#f97316" stroke-width="1.2" fill="none"/>
+            <!-- EMA5 -->
+            <path d="M0,62 Q80,66 160,74 Q240,84 320,96 Q370,102 420,108" stroke="#22c55e" stroke-width="1.2" fill="none"/>
+            <!-- Resistance zone at top -->
+            <rect x="0" y="55" width="180" height="13" fill="#ef4444" opacity="0.15"/>
+            <text x="10" y="68" fill="#ef4444" font-size="8">RESISTANCE ZONE</text>
+            <!-- Rising candles testing resistance -->
+            <rect x="20" y="62" width="6" height="10" fill="#22c55e" rx="1"/><line x1="23" y1="60" x2="23" y2="73" stroke="#22c55e"/>
+            <rect x="32" y="60" width="6" height="8" fill="#22c55e" rx="1"/><line x1="35" y1="57" x2="35" y2="70" stroke="#22c55e"/>
+            <rect x="44" y="59" width="6" height="10" fill="#ef4444" rx="1"/><line x1="47" y1="56" x2="47" y2="71" stroke="#ef4444"/>
+            <!-- SELL signal candle — big bearish -->
+            <rect x="58" y="68" width="9" height="18" fill="#ef4444" rx="1.5"/>
+            <line x1="62" y1="63" x2="62" y2="88" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="54" y="130" fill="#ef4444" font-size="9" font-weight="bold">SELL</text>
+            <!-- Following candles down -->
+            <rect x="73" y="76" width="7" height="14" fill="#ef4444" rx="1"/>
+            <rect x="86" y="84" width="7" height="16" fill="#ef4444" rx="1"/>
+            <rect x="99" y="82" width="7" height="10" fill="#22c55e" rx="1"/>
+            <rect x="112" y="92" width="7" height="14" fill="#ef4444" rx="1"/>
+            <rect x="125" y="100" width="7" height="18" fill="#ef4444" rx="1"/>
+            <!-- SL line -->
+            <line x1="54" y1="60" x2="210" y2="60" stroke="#ef4444" stroke-width="1" stroke-dasharray="3,2" opacity="0.6"/>
+            <text x="212" y="63" fill="#ef4444" font-size="9">SL</text>
+            <!-- TP line -->
+            <line x1="54" y1="122" x2="210" y2="122" stroke="#22c55e" stroke-width="1" stroke-dasharray="3,2" opacity="0.6"/>
+            <text x="212" y="125" fill="#22c55e" font-size="9">TP</text>
+            <text x="8" y="152" fill="#94a3b8" font-size="9">RSI: 68 → 58 → 44  |  Từ overbought rớt xuống 50</text>
+          </svg>
+        </div>
+        <div class="cond-row">
+          <span class="cond-badge cond-ok">✓ Giá dưới EMA200</span>
+          <span class="cond-badge cond-ok">✓ Reject từ Resistance</span>
+          <span class="cond-badge cond-ok">✓ RSI 68→44 (rớt qua 50)</span>
+          <span class="cond-badge cond-ok">✓ EMA5 < EMA13</span>
+          <span class="cond-badge cond-ok">✓ Nến bearish xác nhận</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span>🧠</span> Phân Tích SELL Chuẩn Mực</div>
+        <ol class="step-list">
+          <li><b>Bối cảnh:</b> Giá đang dưới EMA200 → downtrend dài hạn. Có đợt hồi phục (pullback) lên vùng kháng cự.</li>
+          <li><b>Pullback kiểm tra kháng cự:</b> 3 nến tăng test Resistance Zone nhưng không đóng cửa trên được → vùng kháng cự giữ vững.</li>
+          <li><b>SELL signal kích hoạt:</b> Nến giảm mạnh, EMA5 cắt xuống EMA13 → indicator hiện nhãn <span class="pill pill-red">SELL</span></li>
+          <li><b>RSI xác nhận:</b> RSI giảm từ 68 (overbought) xuống 44, vượt ngưỡng 50 đi xuống → momentum chuyển âm rõ ràng. ✅</li>
+          <li><b>Vào SELL:</b> Entry = close nến bearish lớn. SL = high kháng cự + 0.5ATR. TP = 3R.</li>
+          <li><b>Kết quả:</b> Giá tiếp tục giảm về phía support, đạt TP3 → <b class="text-green">WIN +3R</b></li>
+        </ol>
+        <div class="rule-card red mt8">
+          <strong>📌 Bài học: Bán vào pullback</strong>
+          Short tốt nhất là lúc thị trường "cho cơ hội bán giá cao". Đợi giá hồi về kháng cự trong downtrend rồi mới short → SL gọn nhất, TP xa nhất.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EX 5 -->
+  <div id="ex5" class="example-content">
+    <div class="grid-2">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <div class="card-title mb0"><span>📕</span> SELL #2 — Kháng Cự Nhiều Lần Test</div>
+          <span class="result-tag win">✅ WIN +2R</span>
+        </div>
+        <div class="mini-chart-wrap">
+          <svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+            <!-- EMA200 -->
+            <path d="M0,45 Q200,47 420,50" stroke="#3b82f6" stroke-width="1.5" fill="none" opacity="0.7"/>
+            <!-- Thick resistance zone, tested multiple times -->
+            <rect x="0" y="58" width="420" height="16" fill="#ef4444" opacity="0.2"/>
+            <line x1="0" y1="58" x2="420" y2="58" stroke="#ef4444" stroke-width="1" stroke-dasharray="3,2" opacity="0.7"/>
+            <line x1="0" y1="74" x2="420" y2="74" stroke="#ef4444" stroke-width="1" stroke-dasharray="3,2" opacity="0.4"/>
+            <text x="8" y="56" fill="#ef4444" font-size="9" font-weight="bold">RESISTANCE ZONE (3 lần test)</text>
+            <!-- Test 1 -->
+            <line x1="35" y1="50" x2="35" y2="75" stroke="#22c55e" stroke-width="0.8"/>
+            <rect x="32" y="62" width="6" height="13" fill="#ef4444" rx="1"/>
+            <text x="28" y="46" fill="#ef4444" font-size="8">①</text>
+            <!-- Test 2 -->
+            <line x1="70" y1="52" x2="70" y2="76" stroke="#22c55e" stroke-width="0.8"/>
+            <rect x="67" y="62" width="6" height="14" fill="#ef4444" rx="1"/>
+            <text x="63" y="48" fill="#ef4444" font-size="8">②</text>
+            <!-- Test 3 + SELL signal -->
+            <line x1="110" y1="54" x2="110" y2="78" stroke="#22c55e" stroke-width="0.8"/>
+            <rect x="106" y="63" width="9" height="16" fill="#ef4444" rx="1.5"/>
+            <text x="102" y="48" fill="#ef4444" font-size="8" font-weight="bold">③SELL</text>
+            <!-- Down candles -->
+            <rect x="121" y="72" width="7" height="14" fill="#ef4444" rx="1"/>
+            <rect x="134" y="80" width="7" height="12" fill="#ef4444" rx="1"/>
+            <rect x="147" y="76" width="7" height="8" fill="#22c55e" rx="1"/>
+            <rect x="160" y="86" width="7" height="14" fill="#ef4444" rx="1"/>
+            <rect x="173" y="96" width="7" height="12" fill="#ef4444" rx="1"/>
+            <!-- SL -->
+            <line x1="100" y1="56" x2="260" y2="56" stroke="#ef4444" stroke-width="1" stroke-dasharray="3,2" opacity="0.5"/>
+            <text x="262" y="59" fill="#ef4444" font-size="9">SL</text>
+            <!-- TP -->
+            <line x1="100" y1="112" x2="260" y2="112" stroke="#22c55e" stroke-width="1" stroke-dasharray="3,2" opacity="0.5"/>
+            <text x="262" y="115" fill="#22c55e" font-size="9">TP</text>
+            <text x="8" y="152" fill="#94a3b8" font-size="9">Resistance test 3 lần = xác suất SELL lần 3 cao nhất  |  RSI: 65→52</text>
+          </svg>
+        </div>
+        <div class="cond-row">
+          <span class="cond-badge cond-ok">✓ Kháng cự 3 lần test</span>
+          <span class="cond-badge cond-ok">✓ Dưới EMA200</span>
+          <span class="cond-badge cond-ok">✓ RSI rớt khỏi 65</span>
+          <span class="cond-badge cond-ok">✓ SELL signal lần 3</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span>🧠</span> Kháng Cự Nhiều Lần = Càng Đáng Tin</div>
+        <ol class="step-list">
+          <li><b>Quan sát vùng kháng cự:</b> Giá test vùng đỏ 2 lần trước, lần nào cũng bị đẩy xuống. Vùng này được "xác nhận" là kháng cự mạnh.</li>
+          <li><b>Lần test thứ 3:</b> Giá lại test vùng này. Quy tắc: <b>càng nhiều lần test mà không phá được → càng khó phá lần tiếp theo.</b></li>
+          <li><b>SELL signal xuất hiện tại lần 3:</b> Đây là thời điểm vào lệnh xác suất cao nhất. Cộng thêm indicator bật SELL.</li>
+          <li><b>RSI 65 → rớt:</b> RSI chưa overbought nhưng bắt đầu quay đầu → dấu hiệu sớm của cú xuống.</li>
+          <li><b>SL:</b> Đặt trên đỉnh cao nhất của 3 lần test. TP = 2R vì vùng support bên dưới không quá xa.</li>
+          <li><b>Kết quả:</b> Giá phá ra xuống mạnh → <b class="text-green">WIN +2R</b></li>
+        </ol>
+        <div class="rule-card red mt8">
+          <strong>📌 Quy tắc "3 lần test"</strong>
+          Resistance/Support được test 3+ lần mà không phá → xác suất SELL/BUY ở lần test tiếp theo &gt; 70%. Đây là một trong những setup có tỉ lệ thắng cao nhất.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EX 6 -->
+  <div id="ex6" class="example-content">
+    <div class="grid-2">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <div class="card-title mb0"><span>📕</span> SELL #3 — Bỏ Qua Đúng Lúc</div>
+          <span class="result-tag skip">⏭ SKIP — Tránh bẫy</span>
+        </div>
+        <div class="mini-chart-wrap">
+          <svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+            <!-- EMA200 above price — SELL ok context -->
+            <path d="M0,55 Q200,55 420,55" stroke="#3b82f6" stroke-width="1.5" fill="none" opacity="0.7"/>
+            <!-- Strong support zone below -->
+            <rect x="0" y="98" width="420" height="14" fill="#f59e0b" opacity="0.2"/>
+            <line x1="0" y1="98" x2="420" y2="98" stroke="#f59e0b" stroke-width="1.2" stroke-dasharray="3,2" opacity="0.8"/>
+            <text x="8" y="96" fill="#f59e0b" font-size="9" font-weight="bold">SUPPORT ZONE MẠNH</text>
+            <!-- EMA5 / EMA13 -->
+            <path d="M0,72 Q100,74 200,78 Q300,80 420,82" stroke="#f97316" stroke-width="1.2" fill="none"/>
+            <path d="M0,74 Q80,76 160,80 Q240,82 420,85" stroke="#22c55e" stroke-width="1.2" fill="none"/>
+            <!-- Price at support with SELL signal -->
+            <rect x="60" y="82" width="7" height="12" fill="#ef4444" rx="1"/>
+            <rect x="73" y="85" width="7" height="11" fill="#ef4444" rx="1"/>
+            <rect x="86" y="87" width="9" height="14" fill="#ef4444" rx="1.5"/>
+            <line x1="90" y1="82" x2="90" y2="103" stroke="#ef4444" stroke-width="1.5"/>
+            <!-- SELL label with X -->
+            <text x="84" y="130" fill="#ef4444" font-size="9" opacity="0.6">SELL?</text>
+            <circle cx="90" cy="136" r="8" fill="rgba(239,68,68,0.3)" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="86" y="140" fill="#ef4444" font-size="10" font-weight="bold">✕</text>
+            <!-- Price bounces from support instead -->
+            <rect x="101" y="90" width="7" height="10" fill="#ef4444" rx="1"/>
+            <rect x="114" y="92" width="7" height="8" fill="#22c55e" rx="1"/>
+            <rect x="127" y="84" width="7" height="12" fill="#22c55e" rx="1"/>
+            <rect x="140" y="76" width="7" height="14" fill="#22c55e" rx="1"/>
+            <rect x="153" y="68" width="7" height="14" fill="#22c55e" rx="1"/>
+            <!-- Arrow showing price goes up -->
+            <path d="M155,80 Q170,60 185,52" stroke="#22c55e" stroke-width="1.5" fill="none"/>
+            <text x="186" y="50" fill="#22c55e" font-size="9">Bounce lên!</text>
+            <text x="8" y="152" fill="#94a3b8" font-size="9">RSI: 34 (oversold!) — Không short khi RSI &lt; 35  |  Giá chạm support</text>
+          </svg>
+        </div>
+        <div class="cond-row">
+          <span class="cond-badge cond-ok">✓ SELL signal có</span>
+          <span class="cond-badge cond-no">✗ Giá KẾ support mạnh</span>
+          <span class="cond-badge cond-no">✗ RSI 34 (oversold)</span>
+          <span class="cond-badge cond-warn">~ Dưới EMA200 (ok)</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span>🧠</span> Không Short Tại Support Mạnh</div>
+        <ol class="step-list">
+          <li><b>Có SELL signal:</b> EMA5 cắt xuống EMA13, nến đỏ → indicator bật SELL. Nhìn vào muốn short.</li>
+          <li><b>Nhưng nhìn xuống dưới:</b> Giá đang đứng ngay trên <b class="text-yellow">Support Zone vàng mạnh</b>. Nếu short, TP chỉ cách entry vài pip là gặp sàn.</li>
+          <li><b>RSI = 34 (oversold):</b> Thị trường đã bị bán quá mức. Oversold = khả năng bounce cao, không phải tiếp tục giảm.</li>
+          <li><b>R:R không hợp lý:</b> TP bị chặn bởi support → R:R &lt; 1:1. Đây là lệnh "lỗ tiềm năng &gt; lời tiềm năng".</li>
+          <li><b>Quyết định: BỎ QUA</b>. Dù có SELL signal.</li>
+          <li><b>Kết quả nếu short:</b> Giá bounce ngay từ support, tăng ngược lại → SL bị hit ngay. <b class="text-green">SKIP đúng = tránh bẫy RSI oversold + support.</b></li>
+        </ol>
+        <div class="rule-card yellow mt8">
+          <strong>📌 RSI Oversold &lt; 35 = Không Short Mới</strong>
+          RSI dưới 35 không có nghĩa giá sẽ tiếp tục rớt. Ngược lại, đây là vùng dễ bounce. Nếu muốn short, đợi RSI hồi lên 40–50 rồi lại quay đầu xuống mới an toàn.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ SECTION 3: EXIT ══════════════════════════════ -->
+<div id="section-exit" class="section">
+  <div class="card">
+    <div class="card-title"><span>🚪</span> Hệ Thống Thoát Lệnh Sớm — 6 Tín Hiệu Phòng Bị</div>
+    <p style="font-size:13px;color:var(--text-dim);margin-bottom:16px">Không cần đợi SL bị hit. Khi có dấu hiệu dưới đây → xem xét đóng một phần hoặc toàn bộ lệnh ngay.</p>
+    <table class="exit-table">
+      <thead>
+        <tr>
+          <th>Tín hiệu thoát</th>
+          <th>Mô tả & Ví dụ thực tế</th>
+          <th>Hành động</th>
+          <th>Ưu tiên</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="signal-cell text-red">⚡ EMA đảo chiều</td>
+          <td>Đang LONG mà EMA5 cắt xuống EMA13 → indicator báo SELL/INV BUY. Tín hiệu gốc đã bị vô hiệu hóa.<br><br><i style="color:#64748b">Ví dụ: Vào BUY tại giá 100. Sau 5 nến, EMA5 cắt xuống EMA13, indicator hiện "INV BUY" → đóng lệnh ngay dù chưa đến SL.</i></td>
+          <td><span class="pill pill-red">Đóng TOÀN BỘ</span></td>
+          <td><span class="pill pill-red">🔴 KHẨN CẤP</span></td>
+        </tr>
+        <tr>
+          <td class="signal-cell text-yellow">📊 RSI đảo chiều mạnh</td>
+          <td>Đang LONG mà RSI từ 65+ đột ngột rớt xuống dưới 50 trong 1-2 nến. Momentum đã hết.<br><br><i style="color:#64748b">Ví dụ: Vào BUY, RSI lên 72 (overbought). RSI quay đầu rớt về 48 chỉ sau 3 nến → đóng 50% lệnh, dời SL về entry.</i></td>
+          <td><span class="pill pill-yellow">Đóng 50% + dời SL</span></td>
+          <td><span class="pill pill-yellow">🟡 CAO</span></td>
+        </tr>
+        <tr>
+          <td class="signal-cell text-red">🧱 Chạm vùng kháng cự mạnh</td>
+          <td>Đang LONG, giá chạm Resistance Zone đã được test nhiều lần trước. Có thể bị đẩy xuống.<br><br><i style="color:#64748b">Ví dụ: BUY entry 100, TP đặt 115. Nhưng giá chạm resistance zone tại 109 đã được test 3 lần → chốt lời một phần tại 109, để còn lại cho 115.</i></td>
+          <td><span class="pill pill-yellow">Chốt lời 50-70%</span></td>
+          <td><span class="pill pill-yellow">🟡 CAO</span></td>
+        </tr>
+        <tr>
+          <td class="signal-cell" style="color:#06b6d4">📉 Phá vỡ trendline</td>
+          <td>Đang LONG mà giá đóng cửa dưới đường Trendline Support (đường cyan). Cấu trúc tăng bị phá vỡ.<br><br><i style="color:#64748b">Ví dụ: BUY đang lãi +1R. Nến đóng cửa dưới support trendline rõ ràng → đóng lệnh dù chưa đến SL, bảo toàn +1R thay vì đợi SL mất thêm.</i></td>
+          <td><span class="pill pill-red">Đóng TOÀN BỘ</span></td>
+          <td><span class="pill pill-red">🔴 KHẨN CẤP</span></td>
+        </tr>
+        <tr>
+          <td class="signal-cell" style="color:#8b5cf6">🕯️ Nến đảo chiều mạnh</td>
+          <td>Xuất hiện nến engulfing bearish (đang LONG) hoặc bullish (đang SHORT) với thân dài &gt; 2×ATR.<br><br><i style="color:#64748b">Ví dụ: Đang lãi LONG +0.5R. Xuất hiện nến đỏ lớn nuốt 3 nến xanh trước → dấu hiệu đảo chiều mạnh, đóng lệnh bảo toàn dù chỉ lãi nhỏ hoặc hòa vốn.</i></td>
+          <td><span class="pill pill-yellow">Đóng 50-100%</span></td>
+          <td><span class="pill pill-yellow">🟡 CAO</span></td>
+        </tr>
+        <tr>
+          <td class="signal-cell text-green">🎯 Đạt TP1 — Dời SL</td>
+          <td>Đây không hẳn là thoát lệnh mà là bảo vệ lợi nhuận. Khi giá đạt TP1 (TP trung gian đầu tiên).<br><br><i style="color:#64748b">Ví dụ: Entry 100, SL 97, TP1=103, TP-final=109. Khi giá đạt 103 → đóng 30%, dời SL từ 97 lên 100 (hòa vốn). Bây giờ worst case = hòa vốn, không còn rủi ro lỗ.</i></td>
+          <td><span class="pill pill-green">Đóng 30% + SL→Entry</span></td>
+          <td><span class="pill pill-green">🟢 TIÊU CHUẨN</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title"><span>🛡️</span> Chiến Lược "Trailing Stop" Thực Tế</div>
+      <div class="rule-card green">
+        <strong>Bước 1 — Vào lệnh</strong>
+        SL = dưới support (BUY) hoặc trên resistance (SELL). Entry = close nến tín hiệu.
+      </div>
+      <div class="rule-card yellow">
+        <strong>Bước 2 — Đạt TP1 (+1R)</strong>
+        Đóng 30% vị thế. Dời SL từ điểm lỗ về entry (breakeven). Tâm lý thoải mái hơn.
+      </div>
+      <div class="rule-card blue" style="border-left-color:#3b82f6">
+        <strong>Bước 3 — Đạt TP2 (+2R)</strong>
+        Đóng thêm 30%. Dời SL lên TP1 (đang lãi tối thiểu +1R dù bị đá ra).
+      </div>
+      <div class="rule-card purple">
+        <strong>Bước 4 — Để TP-final chạy (+3R)</strong>
+        Còn 40% vị thế đang chạy. SL trail theo EMA13. Đợi TP-final hoặc đến khi EMA đảo chiều.
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span>⚖️</span> Quản Lý Vốn Theo Điều Kiện</div>
+      <div class="stat-row">
+        <div class="stat-box">
+          <div class="val text-green">2%</div>
+          <div class="lbl">Rủi ro/lệnh tối đa</div>
+        </div>
+        <div class="stat-box">
+          <div class="val text-yellow">1%</div>
+          <div class="lbl">Rủi ro/lệnh thường</div>
+        </div>
+        <div class="stat-box">
+          <div class="val text-blue">3:1</div>
+          <div class="lbl">R:R tối thiểu</div>
+        </div>
+      </div>
+      <div class="rule-card green">
+        <strong>✅ Đủ 6–8 điều kiện → Vào 2% vốn</strong>
+        Setup hoàn hảo, đủ điều kiện, tin tưởng cao → vào full size 2%.
+      </div>
+      <div class="rule-card yellow">
+        <strong>⚡ Đủ 4–5 điều kiện → Vào 1% vốn</strong>
+        Setup trung bình, thiếu 1-2 điều kiện nhỏ → half size, quản lý chặt hơn.
+      </div>
+      <div class="rule-card red">
+        <strong>🚫 Dưới 4 điều kiện → KHÔNG vào lệnh</strong>
+        Dù signal đẹp cỡ nào, thiếu điều kiện cốt lõi = bỏ qua hoàn toàn.
+      </div>
+      <div class="rule-card" style="border-left-color:#ef4444">
+        <strong>🛑 Sau 3 lệnh thua liên tiếp → Dừng ngày hôm đó</strong>
+        Thua 3 lệnh liền = thị trường đang không phù hợp hoặc tâm lý có vấn đề. Nghỉ trading ngày hôm đó.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ SECTION 4: SQUEEZE ══════════════════════════════ -->
+<div id="section-squeeze" class="section">
+  <div class="card">
+    <div class="card-title"><span>🔥</span> Vùng Nén Nến (Squeeze / Consolidation) — Nhận Diện & Vào Lệnh</div>
+    <div class="grid-2">
+      <div>
+        <p style="font-size:13px;color:var(--text-dim);margin-bottom:14px">Vùng nén nến là khi thị trường "hít thở" trước khi bùng nổ. Nhận diện đúng = bắt được con sóng lớn với SL nhỏ nhất.</p>
+        <div class="rule-card purple">
+          <strong>🔍 Dấu hiệu nhận biết vùng nén</strong>
+          • Thân nến nhỏ dần (≤ 30% thân nến bình thường)<br>
+          • Bóng nến ngắn (giá dao động &lt; 0.5×ATR/nến)<br>
+          • EMA5 và EMA13 đang gần nhau, gần như song song<br>
+          • Có thể kết hợp Bollinger Bands thu hẹp<br>
+          • Kéo dài ít nhất 3–6 nến
+        </div>
+        <div class="rule-card green">
+          <strong>✅ Cách vào lệnh sau squeeze</strong>
+          1. Xác định vùng nén (≥3 nến nhỏ)<br>
+          2. Chờ nến breakout khỏi vùng nén (thân to, hướng rõ)<br>
+          3. BUY/SELL signal xuất hiện = vào lệnh<br>
+          4. SL = dưới/trên toàn bộ vùng nén<br>
+          5. TP = 2-3×chiều cao vùng nén
+        </div>
+        <div class="rule-card red">
+          <strong>❌ Không vào trong vùng nén</strong>
+          Vào khi giá đang nén = không biết breakout hướng nào. Chờ nến breakout xác nhận hướng trước.
+        </div>
+      </div>
+      <div>
+        <div class="card-title" style="margin-bottom:10px"><span>📊</span> 3 Loại Squeeze Thường Gặp</div>
+
+        <!-- Squeeze type 1 -->
+        <div style="margin-bottom:18px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <span style="font-size:13px;font-weight:700">① Squeeze tại Support → BUY Breakout</span>
+            <span class="pill pill-green">Mạnh nhất</span>
+          </div>
+          <div class="squeeze-demo" id="sq1">
+            <span class="squeeze-label">Support Zone ▼</span>
+          </div>
+          <p style="font-size:12px;color:var(--text-dim)">Giá nén tại vùng support → BUY signal breakout lên. Setup tỉ lệ thắng cao nhất vì support đỡ phía dưới.</p>
+        </div>
+
+        <!-- Squeeze type 2 -->
+        <div style="margin-bottom:18px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <span style="font-size:13px;font-weight:700">② Squeeze tại Resistance → SELL Breakout</span>
+            <span class="pill pill-red">Mạnh</span>
+          </div>
+          <div class="squeeze-demo" id="sq2">
+            <span class="squeeze-label">Resistance Zone ▲</span>
+          </div>
+          <p style="font-size:12px;color:var(--text-dim)">Giá nén tại vùng kháng cự → SELL signal breakout xuống. Tích lũy áp lực bán, phá vỡ mạnh.</p>
+        </div>
+
+        <!-- Squeeze type 3 -->
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <span style="font-size:13px;font-weight:700">③ Squeeze giữa trời → Chờ hướng rõ</span>
+            <span class="pill pill-yellow">Thận trọng</span>
+          </div>
+          <div class="squeeze-demo" id="sq3">
+            <span class="squeeze-label">Không có vùng giá rõ</span>
+          </div>
+          <p style="font-size:12px;color:var(--text-dim)">Squeeze không có support/resistance rõ → xác suất trung bình. Cần thêm RSI và EMA200 xác nhận.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Checklist squeeze -->
+  <div class="card">
+    <div class="card-title"><span>✅</span> Checklist Nhận Diện Squeeze Trước Khi Vào Lệnh</div>
+    <div class="grid-3">
+      <div class="rule-card purple">
+        <strong>📏 Kích thước nến</strong>
+        So sánh 5 nến gần nhất với trung bình 20 nến trước. Nếu &lt; 40% trung bình → đang squeeze.
+      </div>
+      <div class="rule-card blue" style="border-left-color:#06b6d4">
+        <strong>📍 Vị trí vùng nén</strong>
+        Squeeze tại support → ưu tiên BUY.<br>
+        Squeeze tại resistance → ưu tiên SELL.<br>
+        Squeeze giữa chừng → thận trọng, giảm size.
+      </div>
+      <div class="rule-card yellow">
+        <strong>⏱️ Thời gian nén</strong>
+        3–5 nến: squeeze ngắn, breakout có thể yếu.<br>
+        6–10 nến: squeeze vừa, tốt nhất.<br>
+        &gt;10 nến: squeeze dài, breakout thường rất mạnh.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ SECTION 5: RULES ══════════════════════════════ -->
+<div id="section-rules" class="section">
+  <div class="grid-2">
+    <div>
+      <div class="card">
+        <div class="card-title"><span>⚔️</span> 10 Bộ Luật Bất Biến</div>
+        <div class="rule-card red">
+          <strong>Luật 1 — EMA200 là ranh giới tuyệt đối</strong>
+          BUY chỉ khi giá trên EMA200. SELL chỉ khi giá dưới EMA200. Vi phạm = chấp nhận tỉ lệ thắng dưới 45%.
+        </div>
+        <div class="rule-card red">
+          <strong>Luật 2 — Không mua vào vùng kháng cự</strong>
+          Nếu Resistance Zone ngay phía trên trong vòng 1×ATR → không BUY. R:R không đủ.
+        </div>
+        <div class="rule-card red">
+          <strong>Luật 3 — Không bán vào vùng hỗ trợ</strong>
+          Nếu Support Zone ngay phía dưới trong vòng 1×ATR → không SELL. Giá sẽ bounce.
+        </div>
+        <div class="rule-card yellow">
+          <strong>Luật 4 — RSI oversold (&lt;30) = không short mới</strong>
+          Dù có SELL signal, RSI dưới 30 = thị trường đã bán quá mức, dễ reversal bất ngờ.
+        </div>
+        <div class="rule-card yellow">
+          <strong>Luật 5 — RSI overbought (&gt;70) = không buy đuổi</strong>
+          RSI trên 70 lúc BUY signal = mua đỉnh, rủi ro cao. Đợi RSI điều chỉnh về 50–60.
+        </div>
+        <div class="rule-card green">
+          <strong>Luật 6 — Confirm nến luôn BẬT</strong>
+          Cài "Require candle confirmation = ON". Không dùng signal chưa confirm. Mất 1 nến nhưng tránh nhiều bẫy.
+        </div>
+        <div class="rule-card green">
+          <strong>Luật 7 — R:R tối thiểu 2:1</strong>
+          Nếu TP không đủ 2×SL vì bị chặn bởi kháng cự → bỏ lệnh. Không trade R:R dưới 2:1.
+        </div>
+        <div class="rule-card blue" style="border-left-color:#3b82f6">
+          <strong>Luật 8 — Dời SL về entry khi đạt TP1</strong>
+          Khi giá đạt TP1 (lãi +1R) → dời SL về entry ngay. Tâm lý tốt hơn, bảo toàn vốn.
+        </div>
+        <div class="rule-card blue" style="border-left-color:#3b82f6">
+          <strong>Luật 9 — Tín hiệu EMA đảo chiều = thoát ngay</strong>
+          Indicator hiện "INV BUY" / "INV SELL" = vị thế hiện tại đã sai → đóng không chần chừ.
+        </div>
+        <div class="rule-card purple">
+          <strong>Luật 10 — Thua 3 lệnh liên tiếp → dừng ngày</strong>
+          3 lệnh thua liền = tâm lý hoặc điều kiện thị trường có vấn đề. Nghỉ ngơi, xem lại.
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-title"><span>🔎</span> Ma Trận Điều Kiện — Tra Nhanh</div>
+        <table class="exit-table">
+          <thead>
+            <tr><th>Tình huống</th><th>Quyết định</th><th>Lý do</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Signal BUY + trên EMA200 + tại support + RSI 55</td><td><span class="pill pill-green">VÀO LỆNH FULL</span></td><td>Đủ điều kiện cốt lõi</td></tr>
+            <tr><td>Signal BUY + dưới EMA200</td><td><span class="pill pill-red">BỎ QUA</span></td><td>Vi phạm luật 1</td></tr>
+            <tr><td>Signal BUY + trên EMA200 + RSI 72</td><td><span class="pill pill-yellow">CHỜ RSI điều chỉnh</span></td><td>RSI overbought</td></tr>
+            <tr><td>Signal BUY + trên EMA200 + resistance zone ngay trên</td><td><span class="pill pill-red">BỎ QUA</span></td><td>R:R không đủ</td></tr>
+            <tr><td>Signal SELL + dưới EMA200 + tại resistance + RSI 55</td><td><span class="pill pill-green">VÀO LỆNH FULL</span></td><td>Đủ điều kiện cốt lõi</td></tr>
+            <tr><td>Signal SELL + RSI 28</td><td><span class="pill pill-red">BỎ QUA</span></td><td>RSI oversold, dễ bounce</td></tr>
+            <tr><td>Signal SELL + support zone ngay dưới</td><td><span class="pill pill-red">BỎ QUA</span></td><td>Vi phạm luật 3</td></tr>
+            <tr><td>Đang LONG + xuất hiện "INV BUY"</td><td><span class="pill pill-red">ĐÓNG NGAY</span></td><td>Tín hiệu đảo chiều</td></tr>
+            <tr><td>Đang lãi +1R</td><td><span class="pill pill-green">Đóng 30% + SL→Entry</span></td><td>Bảo toàn lãi</td></tr>
+            <tr><td>Giá chạm Resistance trong LONG</td><td><span class="pill pill-yellow">Chốt 50%, theo dõi</span></td><td>Cẩn thận trần giá</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-title"><span>📅</span> Quy Trình Trade Mỗi Ngày</div>
+        <ol class="step-list">
+          <li><b>Nhìn tổng quan:</b> Giá đang trên hay dưới EMA200? Xác định bias (BUY-oriented hay SELL-oriented) cho cả ngày.</li>
+          <li><b>Vẽ vùng giá:</b> Xác định Support Zones và Resistance Zones gần nhất từ indicator. Ghi nhớ vào đầu.</li>
+          <li><b>Chờ signal:</b> Không trading khi chưa có signal. Đọc sách, nghỉ ngơi. Đừng "sáng tạo" signal.</li>
+          <li><b>Khi signal xuất hiện:</b> Chạy qua checklist 8 điểm ngay lập tức. Tính điểm. Quyết định vào/bỏ qua.</li>
+          <li><b>Vào lệnh:</b> Đặt SL và TP theo ATR. Không chỉnh sửa SL để tránh bị hit.</li>
+          <li><b>Quản lý:</b> Đặt alert EMA đảo chiều. Theo dõi RSI. Thực hiện trailing stop khi đạt TP1.</li>
+          <li><b>Cuối ngày:</b> Ghi lại journal: signal có, điều kiện gặp, quyết định, kết quả. Review sau mỗi tuần.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ SECTION 6: QUIZ ══════════════════════════════ -->
+<div id="section-quiz" class="section">
+  <div class="card">
+    <div class="card-title"><span>🎯</span> Luyện Tập — Kiểm Tra Phản Xạ</div>
+    <p style="font-size:13px;color:var(--text-dim);margin-bottom:20px">Đọc tình huống, quyết định nhanh trong 10 giây. Không nhìn đáp án trước.</p>
+    <div id="quiz-container">
+      <div id="quiz-progress" style="font-size:12px;color:var(--text-muted);margin-bottom:12px">Câu 1 / 8</div>
+      <div id="quiz-question" class="rule-card" style="border-left-color:#8b5cf6;font-size:15px;line-height:1.8"></div>
+      <div id="quiz-options" style="display:flex;flex-direction:column;gap:8px;margin-top:14px"></div>
+      <div id="quiz-feedback" style="display:none;margin-top:14px"></div>
+      <div id="quiz-next" style="display:none;margin-top:12px">
+        <button onclick="nextQuestion()" style="background:var(--accent-blue);color:#fff;border:none;padding:10px 24px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">Câu tiếp theo →</button>
+      </div>
+    </div>
+    <div id="quiz-result" style="display:none;text-align:center;padding:24px 0">
+      <div style="font-size:48px;margin-bottom:12px" id="quiz-result-emoji">🎯</div>
+      <div style="font-size:22px;font-weight:800;margin-bottom:8px" id="quiz-result-score"></div>
+      <div style="font-size:14px;color:var(--text-dim);margin-bottom:20px" id="quiz-result-msg"></div>
+      <button onclick="restartQuiz()" style="background:var(--accent-blue);color:#fff;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">🔄 Làm Lại</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- end main -->
+
+<script>
+// ══════════ NAV ══════════
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('section-' + id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ══════════ EXAMPLES ══════════
+function showExample(id, btn) {
+  document.querySelectorAll('.example-content').forEach(e => e.classList.remove('active'));
+  document.querySelectorAll('.ex-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ══════════ CHECKLIST ══════════
+const checkCounts = { buy: 0, sell: 0 };
+const checkTotals = { buy: 8, sell: 8 };
+const criticalItems = { buy: [0, 3], sell: [0, 3] }; // index of critical items per side
+
+function toggleCheck(el, side) {
+  el.classList.toggle('checked');
+  const items = document.querySelectorAll(`#section-checklist .card:nth-child(${side==='buy'?1:2}) .check-item`);
+  let count = 0;
+  items.forEach(item => { if(item.classList.contains('checked')) count++; });
+  updateScore(side, count);
+}
+
+function updateScore(side, count) {
+  const total = checkTotals[side];
+  const pct = Math.round((count / total) * 100);
+  document.getElementById(side + '-score').textContent = count + '/' + total;
+  const bar = document.getElementById(side + '-bar');
+  bar.style.width = pct + '%';
+  bar.style.background = pct >= 75 ? '#10b981' : pct >= 50 ? '#f59e0b' : '#ef4444';
+
+  const verdict = document.getElementById(side + '-verdict');
+  // Check if critical items are checked
+  const items = document.querySelectorAll(`#section-checklist .card:nth-child(${side==='buy'?1:2}) .check-item`);
+  let criticalMet = 0;
+  [0,3].forEach(i => { if(items[i] && items[i].classList.contains('checked')) criticalMet++; });
+
+  if(criticalMet < 2) {
+    verdict.className = 'verdict no';
+    verdict.textContent = '🚫 Thiếu điều kiện BẮT BUỘC — Không vào lệnh';
+  } else if(count >= 6) {
+    verdict.className = 'verdict go';
+    verdict.textContent = '✅ Đủ điều kiện — Vào lệnh FULL SIZE (2% vốn)';
+  } else if(count >= 4) {
+    verdict.className = 'verdict warn';
+    verdict.textContent = '⚡ Đủ cơ bản — Vào lệnh HALF SIZE (1% vốn)';
+  } else {
+    verdict.className = 'verdict no';
+    verdict.textContent = '⚠️ Chưa đủ điều kiện — Không vào lệnh';
+  }
+}
+
+function resetChecklist(side) {
+  const idx = side === 'buy' ? 1 : 2;
+  const items = document.querySelectorAll(`#section-checklist .card:nth-child(${idx}) .check-item`);
+  items.forEach(item => item.classList.remove('checked'));
+  updateScore(side, 0);
+}
+
+// ══════════ SQUEEZE CHARTS ══════════
+function drawSqueeze() {
+  // Squeeze 1: at support, BUY breakout
+  const sq1 = document.getElementById('sq1');
+  const colors1 = ['#ef4444','#22c55e','#ef4444','#22c55e','#22c55e','#ef4444','#22c55e','#22c55e','#22c55e','#22c55e'];
+  const heights1 = [8,6,7,5,6,5,6,5,18,15,13];
+  const tops1 =    [55,56,55,56,55,56,55,56,36,30,22];
+  let html1 = '<span class="squeeze-label">Support Zone ▼</span>';
+  html1 += '<div style="position:absolute;bottom:20px;left:0;right:0;height:2px;background:#f59e0b;opacity:0.4"></div>';
+  // squeeze candles
+  for(let i=0;i<6;i++){
+    html1+=`<div class="candle" style="height:70px;justify-content:flex-end">
+      <div class="wick" style="height:4px"></div>
+      <div class="body" style="height:${heights1[i]-2}px;background:${colors1[i]};opacity:0.8"></div>
+      <div class="wick" style="height:3px"></div>
+    </div>`;
+  }
+  // breakout
+  html1+=`<div class="candle" style="height:70px;justify-content:flex-end">
+    <div class="wick" style="height:6px;background:#22c55e"></div>
+    <div class="body" style="height:28px;background:#22c55e;opacity:1;width:11px"></div>
+    <div class="wick" style="height:3px;background:#22c55e"></div>
+  </div>`;
+  html1+=`<span style="position:absolute;top:6px;right:8px;font-size:9px;color:#22c55e;font-weight:700">BUY ↑</span>`;
+  sq1.innerHTML = html1;
+
+  // Squeeze 2: at resistance, SELL breakout
+  const sq2 = document.getElementById('sq2');
+  let html2 = '<span class="squeeze-label">Resistance Zone ▲</span>';
+  html2 += '<div style="position:absolute;top:20px;left:0;right:0;height:2px;background:#ef4444;opacity:0.4"></div>';
+  const sc2 = ['#22c55e','#ef4444','#22c55e','#ef4444','#22c55e','#ef4444'];
+  for(let i=0;i<6;i++){
+    html2+=`<div class="candle" style="height:70px;justify-content:flex-start;padding-top:22px">
+      <div class="wick" style="height:3px"></div>
+      <div class="body" style="height:7px;background:${sc2[i]};opacity:0.8"></div>
+      <div class="wick" style="height:4px"></div>
+    </div>`;
+  }
+  html2+=`<div class="candle" style="height:70px;justify-content:flex-start;padding-top:22px">
+    <div class="wick" style="height:5px;background:#ef4444"></div>
+    <div class="body" style="height:28px;background:#ef4444;opacity:1;width:11px"></div>
+    <div class="wick" style="height:4px;background:#ef4444"></div>
+  </div>`;
+  html2+=`<span style="position:absolute;bottom:6px;right:8px;font-size:9px;color:#ef4444;font-weight:700">SELL ↓</span>`;
+  sq2.innerHTML = html2;
+
+  // Squeeze 3: mid-air
+  const sq3 = document.getElementById('sq3');
+  let html3 = '<span class="squeeze-label">Không có vùng giá rõ</span>';
+  const sc3 = ['#22c55e','#22c55e','#ef4444','#22c55e','#ef4444','#ef4444','#22c55e'];
+  for(let i=0;i<7;i++){
+    html3+=`<div class="candle" style="height:70px;justify-content:center">
+      <div class="wick" style="height:5px"></div>
+      <div class="body" style="height:8px;background:${sc3[i]};opacity:0.7"></div>
+      <div class="wick" style="height:5px"></div>
+    </div>`;
+  }
+  html3+=`<span style="position:absolute;top:50%;right:10px;transform:translateY(-50%);font-size:9px;color:#f59e0b;font-weight:700">?</span>`;
+  sq3.innerHTML = html3;
+}
+drawSqueeze();
+
+// ══════════ QUIZ ══════════
+const questions = [
+  {
+    q: "📊 Tình huống: BUY signal vừa xuất hiện. Giá đang trên EMA200. RSI = 55. Nhưng giá đang đứng ngay dưới Resistance Zone chỉ 0.5×ATR. Bạn làm gì?",
+    options: ["Vào lệnh BUY ngay", "Bỏ qua — R:R không đủ vì kháng cự chặn gần", "Vào half size vì RSI tốt", "Đợi giá phá kháng cự rồi vào"],
+    correct: 1,
+    explanation: "✅ Đúng! Kháng cự ngay trên nghĩa là TP sẽ bị chặn rất gần. R:R không đủ 2:1. Bỏ qua hoặc đợi giá phá kháng cự và retest mới vào."
+  },
+  {
+    q: "📉 Tình huống: Đang trong lệnh LONG, lãi +0.8R. Xuất hiện nhãn 'INV BUY' trên chart. RSI vừa rớt từ 66 xuống 48. Bạn làm gì?",
+    options: ["Giữ lệnh vì đang lãi, chờ TP", "Đóng 30% chốt lời một phần", "Đóng TOÀN BỘ lệnh ngay lập tức", "Dời SL về entry rồi chờ tiếp"],
+    correct: 2,
+    explanation: "✅ Đúng! 'INV BUY' nghĩa là tín hiệu gốc đã bị vô hiệu hóa — EMA5 vừa cắt xuống EMA13. Đây là tín hiệu thoát khẩn cấp. Đóng ngay, bảo toàn +0.8R còn hơn đợi mất hết."
+  },
+  {
+    q: "🟢 Tình huống: BUY signal xuất hiện. Giá trên EMA200. Bounce từ Support Zone. RSI = 52 và đang tăng. Trước đó có 5 nến nén nhỏ. Bạn làm gì?",
+    options: ["Bỏ qua vì RSI chưa đủ cao", "Vào FULL SIZE — Setup gần hoàn hảo", "Vào half size cho an toàn", "Đợi thêm RSI lên 60 rồi mới vào"],
+    correct: 1,
+    explanation: "✅ Đúng! Đây là setup gần hoàn hảo: trên EMA200 ✓, bounce support ✓, RSI vượt 50 và tăng ✓, có squeeze ✓. Đủ điều kiện → vào FULL SIZE 2% vốn."
+  },
+  {
+    q: "📕 Tình huống: SELL signal vừa xuất hiện. Giá dưới EMA200. RSI = 28 (oversold). Giá đang test Support Zone mạnh từ bên trên. Bạn làm gì?",
+    options: ["Vào SELL ngay vì có signal và đúng trend", "Bỏ qua — RSI oversold + support zone = rủi ro bounce", "Vào half size thôi", "Đặt SL rộng hơn để tránh bị hit"],
+    correct: 1,
+    explanation: "✅ Đúng! RSI 28 = oversold, thị trường đã bán quá mức. Support zone ngay dưới = sàn giá gần. Hai yếu tố này báo hiệu khả năng bounce rất cao. Bỏ qua dù có signal."
+  },
+  {
+    q: "🎯 Tình huống: Đang LONG, giá đạt TP1 (+1R). Bạn làm gì ngay lập tức?",
+    options: ["Giữ nguyên, chờ TP final", "Đóng hết lệnh, lấy +1R", "Đóng 30% + dời SL về entry (breakeven)", "Thêm vào lệnh vì đang đúng hướng"],
+    correct: 2,
+    explanation: "✅ Đúng! Đây là bước quản lý lệnh chuẩn: đóng 30% để chốt lời một phần, dời SL về entry để worst case = hòa vốn. Còn lại 70% tiếp tục chạy về TP2, TP-final."
+  },
+  {
+    q: "🔍 Tình huống: Nhìn chart thấy 6 nến liên tiếp có thân nhỏ, bóng ngắn, dao động rất hẹp. EMA5 và EMA13 đang gần nhau. Giá đang nằm trên Support Zone. Chưa có signal. Bạn làm gì?",
+    options: ["Vào BUY ngay vì đang ở support", "Đây là vùng nén — Chờ nến breakout lên + BUY signal mới vào", "Bỏ qua, không có gì để làm", "Đặt limit order mua tại support"],
+    correct: 1,
+    explanation: "✅ Đúng! Đây là vùng squeeze (nén nến) tại support — setup tiềm năng cao. KHÔNG vào trong vùng nén. Chờ nến breakout lên rõ ràng và có BUY signal → vào lệnh mạnh tay."
+  },
+  {
+    q: "📊 Tình huống: BUY signal. Giá trên EMA200. RSI = 68. Không có support zone rõ ràng. Không có squeeze trước đó. Bạn làm gì?",
+    options: ["Vào vì có signal + EMA200 ủng hộ", "Vào half size vì thiếu điều kiện", "Bỏ qua — Thiếu vùng giá + RSI sắp overbought, điểm mua không tốt", "Đặt SL rộng hơn để bù rủi ro"],
+    correct: 2,
+    explanation: "✅ Đúng! Mua không có vùng support = SL khó đặt, rủi ro cao. RSI 68 sắp overbought = mua đuổi. Không có squeeze = không có tích lũy năng lượng. Setup yếu, bỏ qua."
+  },
+  {
+    q: "⚡ Tình huống: Hôm nay bạn đã thua 3 lệnh liên tiếp. Vừa xuất hiện SELL signal, trên EMA200 (setup sai luôn vì nên dưới EMA200). Bạn làm gì?",
+    options: ["Vào SELL để gỡ lại 3 lệnh thua", "Bỏ qua — Sai điều kiện EMA200, lại còn thua 3 lệnh liên tiếp: dừng ngay", "Vào half size để giảm rủi ro", "Phân tích thêm chart trước khi quyết định"],
+    correct: 1,
+    explanation: "✅ Đúng! Hai lý do không vào: (1) Sell signal nhưng giá trên EMA200 = vi phạm luật 1; (2) Thua 3 lệnh liên tiếp = dừng ngày hôm đó. Không bao giờ trade để 'gỡ lại' — tâm lý sai dẫn đến quyết định sai."
+  }
+];
+
+let currentQ = 0;
+let score = 0;
+let answered = false;
+
+function renderQuestion() {
+  if(currentQ >= questions.length) {
+    showResult();
+    return;
+  }
+  const q = questions[currentQ];
+  document.getElementById('quiz-progress').textContent = `Câu ${currentQ+1} / ${questions.length}`;
+  document.getElementById('quiz-question').textContent = q.q;
+  const opts = document.getElementById('quiz-options');
+  opts.innerHTML = '';
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.textContent = opt;
+    btn.style.cssText = 'background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:12px 16px;border-radius:10px;font-size:13px;cursor:pointer;text-align:left;transition:all 0.2s;';
+    btn.onmouseover = () => { if(!answered) btn.style.borderColor = 'var(--accent-blue)'; };
+    btn.onmouseout = () => { if(!answered) btn.style.borderColor = 'var(--border)'; };
+    btn.onclick = () => selectAnswer(i, btn);
+    opts.appendChild(btn);
+  });
+  document.getElementById('quiz-feedback').style.display = 'none';
+  document.getElementById('quiz-next').style.display = 'none';
+  answered = false;
+}
+
+function selectAnswer(idx, btn) {
+  if(answered) return;
+  answered = true;
+  const q = questions[currentQ];
+  const opts = document.getElementById('quiz-options').querySelectorAll('button');
+  opts.forEach((b, i) => {
+    b.style.cursor = 'default';
+    if(i === q.correct) {
+      b.style.background = 'rgba(16,185,129,0.15)';
+      b.style.borderColor = '#10b981';
+      b.style.color = '#10b981';
+    } else if(i === idx && idx !== q.correct) {
+      b.style.background = 'rgba(239,68,68,0.15)';
+      b.style.borderColor = '#ef4444';
+      b.style.color = '#ef4444';
+    }
+  });
+  const fb = document.getElementById('quiz-feedback');
+  fb.style.display = 'block';
+  if(idx === q.correct) {
+    score++;
+    fb.innerHTML = `<div class="rule-card green">${q.explanation}</div>`;
+  } else {
+    fb.innerHTML = `<div class="rule-card red"><strong>❌ Chưa đúng</strong>${q.explanation}</div>`;
+  }
+  document.getElementById('quiz-next').style.display = 'block';
+}
+
+function nextQuestion() {
+  currentQ++;
+  renderQuestion();
+}
+
+function showResult() {
+  document.getElementById('quiz-container').style.display = 'none';
+  document.getElementById('quiz-result').style.display = 'block';
+  const pct = Math.round((score / questions.length) * 100);
+  document.getElementById('quiz-result-score').textContent = `${score} / ${questions.length} đúng (${pct}%)`;
+  let emoji, msg;
+  if(pct >= 88) { emoji = '🏆'; msg = 'Xuất sắc! Bạn đã nắm vững hệ thống. Sẵn sàng trading thực chiến.'; }
+  else if(pct >= 63) { emoji = '💪'; msg = 'Tốt! Ôn lại các câu sai, đặc biệt phần RSI và vùng giá.'; }
+  else { emoji = '📚'; msg = 'Cần ôn thêm. Đọc lại các luật cốt lõi, đặc biệt EMA200 và R:R.'; }
+  document.getElementById('quiz-result-emoji').textContent = emoji;
+  document.getElementById('quiz-result-msg').textContent = msg;
+}
+
+function restartQuiz() {
+  currentQ = 0; score = 0; answered = false;
+  document.getElementById('quiz-container').style.display = 'block';
+  document.getElementById('quiz-result').style.display = 'none';
+  renderQuestion();
+}
+
+renderQuestion();
+</script>
+</body>
+</html>

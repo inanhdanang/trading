@@ -1,0 +1,700 @@
+//@version=6
+indicator('Buy Sell Signal v2', overlay=true, max_lines_count=500, max_labels_count=200, max_boxes_count=80)
+
+// Mở rộng historical buffer — tránh lỗi "offset beyond historical buffer limit"
+max_bars_back(high,  1100)
+max_bars_back(low,   1100)
+max_bars_back(close, 1100)
+
+// ============================================
+// CORE PARAMETERS
+// ============================================
+emaFastLen    = input.int(5,    'Fast EMA',             minval=1)
+emaSlowLen    = input.int(13,   'Slow EMA',             minval=1)
+atrLen        = input.int(14,   'ATR Period',           minval=1)
+atrMultSL     = input.float(0.5,'SL Multiplier (ATR)',  minval=0.1, step=0.1)
+riskReward    = input.float(3.0,'Risk:Reward (R:R)',    minval=1.0, step=0.5)
+confirmCandle = input.bool(true,'Require candle confirmation')
+
+// ============================================
+// EMA SETTINGS
+// ============================================
+showEmaFast  = input.bool(true,          'Show Fast EMA',  group='EMAs')
+emaFastColor = input.color(color.green,  'Fast EMA Color', group='EMAs')
+showEmaSlow  = input.bool(true,          'Show Slow EMA',  group='EMAs')
+emaSlowColor = input.color(color.orange, 'Slow EMA Color', group='EMAs')
+showEma200   = input.bool(true,          'Show EMA 200',   group='EMAs')
+ema200Color  = input.color(color.blue,   'EMA 200 Color',  group='EMAs')
+ema200Width  = input.int(2,              'EMA 200 Width',  group='EMAs', minval=1, maxval=4)
+
+// ============================================
+// RSI SETTINGS
+// ============================================
+showRSI = input.bool(true, 'Show RSI',        group='RSI')
+rsiLen  = input.int(14,    'RSI Length',       group='RSI', minval=1)
+rsiOB   = input.int(70,    'Overbought Level', group='RSI', minval=50, maxval=100)
+rsiOS   = input.int(30,    'Oversold Level',   group='RSI', minval=0,  maxval=50)
+
+// ============================================
+// TRENDLINE SETTINGS
+// ============================================
+// Chiến lược:
+//   • Thu thập pivot highs (đỉnh) và pivot lows (đáy) trong vùng lookback
+//   • Mỗi NHÓM 3 pivot liên tiếp → vẽ 1 đường linear regression (best-fit line)
+//     - Nhóm 1: pivot [0],[1],[2]  → đường MỚI NHẤT  (nét liền, dày)
+//     - Nhóm 2: pivot [1],[2],[3]  → đường THỨ HAI   (nét liền, mỏng)
+//     - Nhóm 3: pivot [2],[3],[4]  → đường CŨ NHẤT   (nét đứt)
+//   • Resistance (đỉnh→đỉnh): màu đỏ
+//   • Support    (đáy →đáy ): màu xanh
+//   => Luôn có ít nhất 4 đường (2 resistance + 2 support) nếu đủ pivot
+
+showTL     = input.bool(true, 'Show Trendlines',            group='Trendlines')
+tlLookback = input.int(300,   'Lookback (bars)',             group='Trendlines', minval=50,  maxval=900)
+tlPivotLen = input.int(8,     'Pivot Strength (bars/side)',  group='Trendlines', minval=3,   maxval=50)
+tlExtRight = input.int(10,    'Extend Right (bars)',         group='Trendlines', minval=1,   maxval=300)
+// Lưu ý: tham số Extend Right không còn được dùng để tính điểm cuối thủ công.
+// Các đường trendline dùng extend=extend.right → không gây zoom out biểu đồ.
+tlBearClr  = input.color(color.new(#f44336, 0),  'Resistance Color', group='Trendlines')
+tlBullClr  = input.color(color.new(#00bcd4, 0),  'Support Color',    group='Trendlines')
+tlWidth    = input.int(2, 'Main Line Width', group='Trendlines', minval=1, maxval=4)
+tlTF       = input.timeframe('', 'Timeframe (blank=current)', group='Trendlines')
+
+// ============================================
+// SUPPORT / RESISTANCE ZONES
+// ============================================
+// Chiến lược:
+//   • Gom các pivot high/low gần giá nhau (trong khoảng zoneTolerance × ATR)
+//     thành 1 vùng (zone) hình chữ nhật mờ
+//   • Resistance zone (đỉnh): màu hồng/đỏ nhạt
+//   • Support zone (đáy): màu vàng cam nhạt
+//   • Độ dài ngang (số nến) điều chỉnh được độc lập với trendline lookback
+//   • Bật/tắt riêng biệt
+
+showZones      = input.bool(true,  'Show Support/Resistance Zones', group='S/R Zones')
+zoneLookback   = input.int(300,    'Zone Lookback (bars)',           group='S/R Zones', minval=50, maxval=900)
+zonePivotLen   = input.int(10,     'Zone Pivot Strength (bars/side)',group='S/R Zones', minval=3,  maxval=50)
+zoneTolerance  = input.float(1.0,  'Zone Merge Tolerance (× ATR)',   group='S/R Zones', minval=0.1, step=0.1, maxval=5.0)
+zoneMaxCount   = input.int(4,      'Max Zones per side',             group='S/R Zones', minval=1, maxval=4)
+zoneExtendBars = input.int(60,     'Zone Width Right (bars)',        group='S/R Zones', minval=5, maxval=300)
+zoneTF         = input.timeframe('', 'Zone Timeframe (blank=current, MTF)', group='S/R Zones')
+zoneMergeOverlap = input.bool(true, 'Gộp các vùng chồng/gần nhau (giảm nhiễu)', group='S/R Zones')
+zoneMergeGap   = input.float(0.5,  'Khoảng cách gộp thêm (× ATR)', group='S/R Zones', minval=0.0, step=0.1, maxval=3.0)
+zoneResColor   = input.color(color.new(#f44336, 80), 'Resistance Zone Color', group='S/R Zones')
+zoneSupColor   = input.color(color.new(#ffb74d, 75), 'Support Zone Color',    group='S/R Zones')
+zoneBorderRes  = input.color(color.new(#f44336, 40), 'Resistance Border',     group='S/R Zones')
+zoneBorderSup  = input.color(color.new(#ff9800, 40), 'Support Border',        group='S/R Zones')
+zoneFlipEnable = input.bool(true, 'Đổi màu khi Zone bị phá vỡ (Flip S↔R)', group='S/R Zones')
+zoneBreakBuffer= input.float(0.1, 'Break Buffer (× ATR)', group='S/R Zones', minval=0.0, step=0.05, maxval=1.0)
+
+// ============================================
+// EMA & INDICATOR CALCULATIONS
+// ============================================
+emaFast = ta.ema(close, emaFastLen)
+emaSlow = ta.ema(close, emaSlowLen)
+ema200  = ta.ema(close, 200)
+atr     = ta.atr(atrLen)
+rsiVal  = ta.rsi(close, rsiLen)
+
+ema200CrossUp   = ta.crossover (close, ema200)
+ema200CrossDown = ta.crossunder(close, ema200)
+
+// ============================================
+// TREND & SIGNAL LOGIC
+// ============================================
+bullTrend   = emaFast > emaSlow
+bearTrend   = emaFast < emaSlow
+trendChange = bullTrend != bullTrend[1]
+
+buySignal  = confirmCandle ? (bullTrend and trendChange and close > open) : (bullTrend and trendChange)
+sellSignal = confirmCandle ? (bearTrend and trendChange and close < open) : (bearTrend and trendChange)
+
+// ============================================
+// POSITION MANAGEMENT
+// ============================================
+var float  entryPrice      = na
+var float  stopLoss        = na
+var float  takeProfitFinal = na
+var bool   inPosition      = false
+var string positionType    = ''
+var float[] tpLevels       = array.new_float(0)
+var bool[]  tpHitFlags     = array.new_bool(0)
+
+tpFinalHit  = false
+slHit       = false
+invalidated = false
+
+if inPosition and positionType == 'LONG'
+    if high >= takeProfitFinal
+        tpFinalHit   := true
+        inPosition   := false
+        positionType := ''
+    else if low <= stopLoss
+        slHit        := true
+        inPosition   := false
+        positionType := ''
+
+if inPosition and positionType == 'SHORT'
+    if low <= takeProfitFinal
+        tpFinalHit   := true
+        inPosition   := false
+        positionType := ''
+    else if high >= stopLoss
+        slHit        := true
+        inPosition   := false
+        positionType := ''
+
+if inPosition and array.size(tpLevels) > 0
+    for i = 0 to array.size(tpLevels) - 1
+        if not array.get(tpHitFlags, i)
+            if positionType == 'LONG'  and high >= array.get(tpLevels, i)
+                array.set(tpHitFlags, i, true)
+            else if positionType == 'SHORT' and low <= array.get(tpLevels, i)
+                array.set(tpHitFlags, i, true)
+
+showBuySignal  = false
+showSellSignal = false
+var string invalidatedType = ''
+
+if buySignal
+    if not inPosition or positionType != 'LONG'
+        if inPosition and positionType == 'SHORT'
+            invalidated     := true
+            invalidatedType := 'SELL'
+            inPosition      := false
+        entryPrice      := close
+        stopLoss        := low - atr * atrMultSL
+        risk             = entryPrice - stopLoss
+        takeProfitFinal := entryPrice + risk * riskReward
+        array.clear(tpLevels)
+        array.clear(tpHitFlags)
+        for i = 1 to math.floor(riskReward) - 1
+            array.push(tpLevels,   entryPrice + risk * i)
+            array.push(tpHitFlags, false)
+        inPosition     := true
+        positionType   := 'LONG'
+        showBuySignal  := true
+
+if sellSignal
+    if not inPosition or positionType != 'SHORT'
+        if inPosition and positionType == 'LONG'
+            invalidated     := true
+            invalidatedType := 'BUY'
+            inPosition      := false
+        entryPrice      := close
+        stopLoss        := high + atr * atrMultSL
+        risk             = stopLoss - entryPrice
+        takeProfitFinal := entryPrice - risk * riskReward
+        array.clear(tpLevels)
+        array.clear(tpHitFlags)
+        for i = 1 to math.floor(riskReward) - 1
+            array.push(tpLevels,   entryPrice - risk * i)
+            array.push(tpHitFlags, false)
+        inPosition     := true
+        positionType   := 'SHORT'
+        showSellSignal := true
+
+// ============================================
+// PIVOT DETECTION (hỗ trợ đa khung thời gian)
+// ============================================
+htfHigh = tlTF != '' ? request.security(syminfo.tickerid, tlTF, high, lookahead=barmerge.lookahead_off) : high
+htfLow  = tlTF != '' ? request.security(syminfo.tickerid, tlTF, low,  lookahead=barmerge.lookahead_off) : low
+
+rawPH = ta.pivothigh(htfHigh, tlPivotLen, tlPivotLen)
+rawPL = ta.pivotlow (htfLow,  tlPivotLen, tlPivotLen)
+
+// Lưu tối đa 6 pivot gần nhất (index 0 = gần nhất)
+var float[] phP = array.new_float(0)  // pivot high prices
+var int[]   phB = array.new_int(0)    // pivot high bar_index
+var float[] plP = array.new_float(0)  // pivot low prices
+var int[]   plB = array.new_int(0)    // pivot low bar_index
+
+if not na(rawPH)
+    pvBar = bar_index - tlPivotLen
+    if pvBar >= bar_index - tlLookback
+        array.unshift(phP, rawPH)
+        array.unshift(phB, pvBar)
+        if array.size(phP) > 6
+            array.pop(phP)
+            array.pop(phB)
+
+if not na(rawPL)
+    pvBar = bar_index - tlPivotLen
+    if pvBar >= bar_index - tlLookback
+        array.unshift(plP, rawPL)
+        array.unshift(plB, pvBar)
+        if array.size(plP) > 6
+            array.pop(plP)
+            array.pop(plB)
+
+// ============================================
+// HÀM CHIẾU ĐIỂM CUỐI ĐƯỜNG THẲNG QUA 2 ĐIỂM
+// ============================================
+// Cho 2 điểm (x0,y0) và (x1,y1), tính y tại xEnd
+projectY(x0, y0, x1, y1, xEnd) =>
+    dx = float(x1 - x0)
+    dx == 0.0 ? float(y1) : float(y1) + (float(y1) - float(y0)) / dx * float(xEnd - x1)
+
+// ============================================
+// VẼ TRENDLINES — Nối trực tiếp 2 pivot thực tế
+// ============================================
+// Nguyên tắc đúng như trader vẽ tay:
+//   Resistance đường 1 (MỚI): nối đỉnh[1] → đỉnh[0], kéo phải  (nét LIỀN, dày)
+//   Resistance đường 2      : nối đỉnh[2] → đỉnh[1], kéo phải  (nét LIỀN, mỏng)
+//   Resistance đường 3 (CŨ) : nối đỉnh[3] → đỉnh[2], kéo phải  (nét ĐỨT)
+//   Support tương tự với đáy.
+//
+//   Đường "mới nhất" = bắt đầu từ pivot gần nhất nhất với bar hiện tại.
+//   Đường "cũ" = bắt đầu từ pivot xa hơn → nét đứt, mờ hơn.
+
+var line[] bearLines = array.new_line(0)
+var line[] bullLines = array.new_line(0)
+
+if barstate.islast and showTL
+
+    // Xóa đường cũ
+    if array.size(bearLines) > 0
+        for i = 0 to array.size(bearLines) - 1
+            line.delete(array.get(bearLines, i))
+        array.clear(bearLines)
+    if array.size(bullLines) > 0
+        for i = 0 to array.size(bullLines) - 1
+            line.delete(array.get(bullLines, i))
+        array.clear(bullLines)
+
+    nPH = array.size(phP)
+    nPL = array.size(plP)
+
+    // Điểm cuối = pivot gần nhất + tlExtRight bars, nhưng tối đa là bar_index
+    // → đường không vượt quá bar hiện tại → TradingView không zoom out biểu đồ
+
+    // ══════════════════════════════════════════
+    // RESISTANCE TRENDLINES (nối đỉnh → đỉnh)
+    // ══════════════════════════════════════════
+
+    // Đường 1 — MỚI NHẤT: đỉnh[1] → đỉnh[0]  (nét LIỀN, dày, không mờ)
+    if nPH >= 2
+        x0 = array.get(phB, 1)
+        y0 = array.get(phP, 1)
+        x1 = array.get(phB, 0)
+        y1 = array.get(phP, 0)
+        xEnd = x1 + tlExtRight
+        xFinal = math.min(xEnd, bar_index)
+        yFinal = projectY(x0, y0, x1, y1, xFinal)
+        ln = line.new(x0, y0, xFinal, yFinal,
+             color=tlBearClr, width=tlWidth, style=line.style_solid)
+        array.push(bearLines, ln)
+
+    // Đường 2 — THỨ HAI: đỉnh[2] → đỉnh[1]  (nét LIỀN, mỏng hơn 1px, hơi mờ)
+    if nPH >= 3
+        x0 = array.get(phB, 2)
+        y0 = array.get(phP, 2)
+        x1 = array.get(phB, 1)
+        y1 = array.get(phP, 1)
+        xEnd = x1 + tlExtRight
+        xFinal = math.min(xEnd, bar_index)
+        yFinal = projectY(x0, y0, x1, y1, xFinal)
+        ln = line.new(x0, y0, xFinal, yFinal,
+             color=color.new(tlBearClr, 40), width=math.max(1, tlWidth - 1), style=line.style_solid)
+        array.push(bearLines, ln)
+
+    // Đường 3 — CŨ NHẤT: đỉnh[3] → đỉnh[2]  (nét ĐỨT, mỏng nhất, mờ nhất)
+    if nPH >= 4
+        x0 = array.get(phB, 3)
+        y0 = array.get(phP, 3)
+        x1 = array.get(phB, 2)
+        y1 = array.get(phP, 2)
+        xEnd = x1 + tlExtRight
+        xFinal = math.min(xEnd, bar_index)
+        yFinal = projectY(x0, y0, x1, y1, xFinal)
+        ln = line.new(x0, y0, xFinal, yFinal,
+             color=color.new(tlBearClr, 65), width=1, style=line.style_dashed)
+        array.push(bearLines, ln)
+
+    // ══════════════════════════════════════════
+    // SUPPORT TRENDLINES (nối đáy → đáy)
+    // ══════════════════════════════════════════
+
+    // Đường 1 — MỚI NHẤT: đáy[1] → đáy[0]  (nét LIỀN, dày, không mờ)
+    if nPL >= 2
+        x0 = array.get(plB, 1)
+        y0 = array.get(plP, 1)
+        x1 = array.get(plB, 0)
+        y1 = array.get(plP, 0)
+        xEnd = x1 + tlExtRight
+        xFinal = math.min(xEnd, bar_index)
+        yFinal = projectY(x0, y0, x1, y1, xFinal)
+        ln = line.new(x0, y0, xFinal, yFinal,
+             color=tlBullClr, width=tlWidth, style=line.style_solid)
+        array.push(bullLines, ln)
+
+    // Đường 2 — THỨ HAI: đáy[2] → đáy[1]  (nét LIỀN, mỏng hơn 1px, hơi mờ)
+    if nPL >= 3
+        x0 = array.get(plB, 2)
+        y0 = array.get(plP, 2)
+        x1 = array.get(plB, 1)
+        y1 = array.get(plP, 1)
+        xEnd = x1 + tlExtRight
+        xFinal = math.min(xEnd, bar_index)
+        yFinal = projectY(x0, y0, x1, y1, xFinal)
+        ln = line.new(x0, y0, xFinal, yFinal,
+             color=color.new(tlBullClr, 40), width=math.max(1, tlWidth - 1), style=line.style_solid)
+        array.push(bullLines, ln)
+
+    // Đường 3 — CŨ NHẤT: đáy[3] → đáy[2]  (nét ĐỨT, mỏng nhất, mờ nhất)
+    if nPL >= 4
+        x0 = array.get(plB, 3)
+        y0 = array.get(plP, 3)
+        x1 = array.get(plB, 2)
+        y1 = array.get(plP, 2)
+        xEnd = x1 + tlExtRight
+        xFinal = math.min(xEnd, bar_index)
+        yFinal = projectY(x0, y0, x1, y1, xFinal)
+        ln = line.new(x0, y0, xFinal, yFinal,
+             color=color.new(tlBullClr, 65), width=1, style=line.style_dashed)
+        array.push(bullLines, ln)
+
+// ============================================
+// SUPPORT / RESISTANCE ZONES — PIVOT COLLECTION, DRAWING & FLIP LOGIC
+// ============================================
+// Hỗ trợ đa khung thời gian (MTF) cho zones
+zHigh_src = zoneTF != '' ? request.security(syminfo.tickerid, zoneTF, high, lookahead=barmerge.lookahead_off) : high
+zLow_src  = zoneTF != '' ? request.security(syminfo.tickerid, zoneTF, low,  lookahead=barmerge.lookahead_off) : low
+
+zRawPH = ta.pivothigh(zHigh_src, zonePivotLen, zonePivotLen)
+zRawPL = ta.pivotlow (zLow_src,  zonePivotLen, zonePivotLen)
+
+var float[] zPhP = array.new_float(0)  // zone pivot high prices
+var int[]   zPhB = array.new_int(0)
+var float[] zPlP = array.new_float(0)  // zone pivot low prices
+var int[]   zPlB = array.new_int(0)
+
+if not na(zRawPH)
+    zBar = bar_index - zonePivotLen
+    if zBar >= bar_index - zoneLookback
+        array.unshift(zPhP, zRawPH)
+        array.unshift(zPhB, zBar)
+        if array.size(zPhP) > 20
+            array.pop(zPhP)
+            array.pop(zPhB)
+
+if not na(zRawPL)
+    zBar = bar_index - zonePivotLen
+    if zBar >= bar_index - zoneLookback
+        array.unshift(zPlP, zRawPL)
+        array.unshift(zPlB, zBar)
+        if array.size(zPlP) > 20
+            array.pop(zPlP)
+            array.pop(zPlB)
+
+// ── Persistent zone state (cho phép flip) ──
+// Mỗi zone lưu: top, bottom, startBar, type (1=Resistance, -1=Support), broken flag
+var float[] zTop    = array.new_float(0)
+var float[] zBot    = array.new_float(0)
+var int[]   zStart  = array.new_int(0)
+var int[]   zType   = array.new_int(0)   // 1 = Resistance(hồng), -1 = Support(cam)
+var box[]   zBoxes  = array.new_box(0)
+var bool[]  usedPH  = array.new_bool(0)
+var bool[]  usedPL  = array.new_bool(0)
+
+if barstate.islast and showZones
+    // Xóa zones cũ (vẽ lại từ đầu mỗi bar cuối)
+    if array.size(zBoxes) > 0
+        for i = 0 to array.size(zBoxes) - 1
+            box.delete(array.get(zBoxes, i))
+    array.clear(zBoxes)
+    array.clear(zTop)
+    array.clear(zBot)
+    array.clear(zStart)
+    array.clear(zType)
+
+    tol = atr * zoneTolerance
+    breakTol = atr * zoneBreakBuffer
+
+    // ── Gom RESISTANCE ZONES (đỉnh gần giá nhau) ──
+    nZPH = array.size(zPhP)
+    if nZPH > 0
+        array.clear(usedPH)
+        for i = 0 to nZPH - 1
+            array.push(usedPH, false)
+
+        zonesFound = 0
+        for i = 0 to nZPH - 1
+            if not array.get(usedPH, i) and zonesFound < zoneMaxCount
+                baseP = array.get(zPhP, i)
+                baseB = array.get(zPhB, i)
+                zH = baseP
+                zL = baseP
+                zMinB = baseB
+                array.set(usedPH, i, true)
+                for j = i + 1 to nZPH - 1
+                    if not array.get(usedPH, j)
+                        pj = array.get(zPhP, j)
+                        bj = array.get(zPhB, j)
+                        if math.abs(pj - baseP) <= tol
+                            zH := math.max(zH, pj)
+                            zL := math.min(zL, pj)
+                            zMinB := math.min(zMinB, bj)
+                            array.set(usedPH, j, true)
+                pad = tol * 0.15
+                array.push(zTop,   zH + pad)
+                array.push(zBot,   zL - pad)
+                array.push(zStart, zMinB)
+                array.push(zType,  1)   // resistance
+                zonesFound += 1
+
+    // ── Gom SUPPORT ZONES (đáy gần giá nhau) ──
+    nZPL = array.size(zPlP)
+    if nZPL > 0
+        array.clear(usedPL)
+        for i = 0 to nZPL - 1
+            array.push(usedPL, false)
+
+        zonesFoundS = 0
+        for i = 0 to nZPL - 1
+            if not array.get(usedPL, i) and zonesFoundS < zoneMaxCount
+                baseP = array.get(zPlP, i)
+                baseB = array.get(zPlB, i)
+                zH = baseP
+                zL = baseP
+                zMinB = baseB
+                array.set(usedPL, i, true)
+                for j = i + 1 to nZPL - 1
+                    if not array.get(usedPL, j)
+                        pj = array.get(zPlP, j)
+                        bj = array.get(zPlB, j)
+                        if math.abs(pj - baseP) <= tol
+                            zH := math.max(zH, pj)
+                            zL := math.min(zL, pj)
+                            zMinB := math.min(zMinB, bj)
+                            array.set(usedPL, j, true)
+                pad = tol * 0.15
+                array.push(zTop,   zH + pad)
+                array.push(zBot,   zL - pad)
+                array.push(zStart, zMinB)
+                array.push(zType,  -1)  // support
+                zonesFoundS += 1
+
+    // ── GỘP CÁC VÙNG CHỒNG/GẦN NHAU (giảm nhiễu) ──
+    // Sau khi tạo xong tất cả zones (resistance + support), gộp các vùng
+    // có khoảng cách (top/bot) gần nhau hoặc chồng lấn thành 1 vùng lớn hơn.
+    // Vùng gộp giữ type của vùng có biên rộng hơn (ưu tiên vùng tạo trước = mới hơn).
+    if zoneMergeOverlap and array.size(zTop) > 1
+        mergeGap = atr * zoneMergeGap
+        nZones = array.size(zTop)
+        zMerged = array.new_bool(nZones, false)
+
+        for i = 0 to nZones - 1
+            if i < array.size(zMerged) and not array.get(zMerged, i)
+                iTop = array.get(zTop, i)
+                iBot = array.get(zBot, i)
+                iStart = array.get(zStart, i)
+                for j = i + 1 to nZones - 1
+                    if j < array.size(zMerged) and not array.get(zMerged, j)
+                        jTop = array.get(zTop, j)
+                        jBot = array.get(zBot, j)
+                        jStart = array.get(zStart, j)
+                        // Kiểm tra chồng lấn hoặc gần nhau trong mergeGap
+                        overlap = (iTop + mergeGap >= jBot) and (iBot - mergeGap <= jTop)
+                        if overlap
+                            iTop := math.max(iTop, jTop)
+                            iBot := math.min(iBot, jBot)
+                            iStart := math.min(iStart, jStart)
+                            array.set(zMerged, j, true)
+                array.set(zTop, i, iTop)
+                array.set(zBot, i, iBot)
+                array.set(zStart, i, iStart)
+
+        // Loại bỏ các zone đã bị gộp vào zone khác (duyệt ngược để xóa an toàn)
+        for i = nZones - 1 to 0
+            if array.get(zMerged, i)
+                array.remove(zTop, i)
+                array.remove(zBot, i)
+                array.remove(zStart, i)
+                array.remove(zType, i)
+
+    // ── FLIP LOGIC ──
+    // Resistance zone bị phá lên (close > top + breakTol) → đổi thành Support
+    // Support zone bị phá xuống (close < bottom - breakTol) → đổi thành Resistance
+    if zoneFlipEnable
+        for i = 0 to array.size(zType) - 1
+            t   = array.get(zType, i)
+            top = array.get(zTop, i)
+            bot = array.get(zBot, i)
+            if t == 1 and close > top + breakTol
+                array.set(zType, i, -1)   // Resistance broken UP -> becomes Support
+            else if t == -1 and close < bot - breakTol
+                array.set(zType, i, 1)    // Support broken DOWN -> becomes Resistance
+
+    // ── VẼ ZONES ──
+    for i = 0 to array.size(zType) - 1
+        t       = array.get(zType, i)
+        top     = array.get(zTop, i)
+        bot     = array.get(zBot, i)
+        startB  = array.get(zStart, i)
+        bgC     = t == 1 ? zoneResColor  : zoneSupColor
+        brC     = t == 1 ? zoneBorderRes : zoneBorderSup
+        bx = box.new(startB, top, bar_index + zoneExtendBars, bot,
+             border_color=brC, border_width=1, bgcolor=bgC, extend=extend.none)
+        array.push(zBoxes, bx)
+
+// ============================================
+// EMA PLOTS
+// ============================================
+plot(emaFast, 'Fast EMA', color=color.new(emaFastColor, 0), linewidth=1,
+     display=showEmaFast ? display.all : display.none)
+plot(emaSlow, 'Slow EMA', color=color.new(emaSlowColor, 0), linewidth=1,
+     display=showEmaSlow ? display.all : display.none)
+plot(ema200,  'EMA 200',  color=color.new(ema200Color,  0), linewidth=ema200Width,
+     display=showEma200  ? display.all : display.none)
+
+bgcolor(ema200CrossUp   ? color.new(color.blue, 88) : na, title='Cross EMA200 Up')
+bgcolor(ema200CrossDown ? color.new(color.red,  88) : na, title='Cross EMA200 Dn')
+
+// ============================================
+// SIGNAL SHAPES
+// ============================================
+plotshape(showBuySignal,  'BUY',  shape.labelup,   location.belowbar,
+     color.new(color.lime, 0), text='BUY',  textcolor=color.white, size=size.small)
+plotshape(showSellSignal, 'SELL', shape.labeldown,  location.abovebar,
+     color.new(color.red,  0), text='SELL', textcolor=color.white, size=size.small)
+plotshape(tpFinalHit, 'FINAL TP', shape.circle, location.abovebar,
+     color.new(#00ff00, 0), text='🎯 TP', textcolor=#00ff00, size=size.small)
+plotshape(slHit, 'SL HIT', shape.xcross, location.belowbar,
+     color.new(#ff0000, 0), text='SL', textcolor=color.white, size=size.small)
+plotshape(invalidated and invalidatedType=='BUY',  'INV BUY',
+     shape.diamond, location.abovebar, color.new(color.yellow,0),
+     text='INV BUY',  textcolor=color.gray, size=size.tiny)
+plotshape(invalidated and invalidatedType=='SELL', 'INV SELL',
+     shape.diamond, location.abovebar, color.new(color.yellow,0),
+     text='INV SELL', textcolor=color.gray, size=size.tiny)
+
+// ============================================
+// INTERMEDIATE TPs
+// ============================================
+var bool[] tpAlreadyMarked = array.new_bool(0)
+if showBuySignal or showSellSignal
+    array.clear(tpAlreadyMarked)
+    for i = 1 to math.floor(riskReward) - 1
+        array.push(tpAlreadyMarked, false)
+
+_tpFS = array.size(tpHitFlags)
+_tpMS = array.size(tpAlreadyMarked)
+if inPosition and _tpFS > 0 and _tpMS > 0 and _tpFS == _tpMS
+    for i = 0 to _tpFS - 1
+        if array.get(tpHitFlags, i) and not array.get(tpAlreadyMarked, i)
+            label.new(bar_index, high, 'TP' + str.tostring(i+1),
+                 style=label.style_label_down,
+                 color=color.new(color.green, 50),
+                 textcolor=color.white, size=size.tiny, yloc=yloc.abovebar)
+            array.set(tpAlreadyMarked, i, true)
+
+// ============================================
+// RISK MANAGEMENT LINES
+// ============================================
+var line entryLine   = na
+var line slLine      = na
+var line tpLineFinal = na
+var line[] tpILines  = array.new_line(0)
+
+if inPosition and positionType != ''
+    if na(entryLine)
+        entryLine := line.new(bar_index-10, entryPrice, bar_index+10, entryPrice,
+             color=color.new(color.white,0), width=1, style=line.style_dashed)
+    else
+        line.set_xy1(entryLine, bar_index-10, entryPrice)
+        line.set_xy2(entryLine, bar_index+10, entryPrice)
+    if na(slLine)
+        slLine := line.new(bar_index, stopLoss, bar_index+1, stopLoss,
+             color=color.new(color.red,0), width=2)
+    else
+        line.set_xy1(slLine, bar_index, stopLoss)
+        line.set_xy2(slLine, bar_index+1, stopLoss)
+    if na(tpLineFinal)
+        tpLineFinal := line.new(bar_index, takeProfitFinal, bar_index+1, takeProfitFinal,
+             color=color.new(color.green,0), width=2)
+    else
+        line.set_xy1(tpLineFinal, bar_index, takeProfitFinal)
+        line.set_xy2(tpLineFinal, bar_index+1, takeProfitFinal)
+    if array.size(tpILines) == 0 and array.size(tpLevels) > 0
+        for i = 0 to array.size(tpLevels) - 1
+            ln = line.new(bar_index, array.get(tpLevels,i), bar_index+1, array.get(tpLevels,i),
+                 color=color.new(color.green,60), width=1, style=line.style_dotted)
+            array.push(tpILines, ln)
+    else if array.size(tpILines) > 0 and array.size(tpLevels) == array.size(tpILines)
+        for i = 0 to array.size(tpILines) - 1
+            line.set_xy1(array.get(tpILines,i), bar_index,   array.get(tpLevels,i))
+            line.set_xy2(array.get(tpILines,i), bar_index+1, array.get(tpLevels,i))
+else
+    if not na(entryLine)
+        line.delete(entryLine)
+        entryLine := na
+    if not na(slLine)
+        line.delete(slLine)
+        slLine := na
+    if not na(tpLineFinal)
+        line.delete(tpLineFinal)
+        tpLineFinal := na
+    if array.size(tpILines) > 0
+        for i = 0 to array.size(tpILines) - 1
+            line.delete(array.get(tpILines,i))
+        array.clear(tpILines)
+
+// ============================================
+// INFO TABLE
+// ============================================
+var table infoTable = table.new(position.top_right, 2, 7,
+     bgcolor=color.new(color.black, 85), border_width=1)
+
+if barstate.islast
+    _statusTxt  = inPosition ? positionType : 'No Position'
+    _bgClr      = not inPosition ? color.new(color.gray, 80) : positionType == 'LONG' ? color.new(#00c853, 10) : color.new(#d50000, 10)
+    _statusClr  = not inPosition ? color.gray : color.white
+    table.cell(infoTable, 0, 0, 'Status:', text_color=color.white, text_size=size.small)
+    table.cell(infoTable, 1, 0, _statusTxt, text_color=_statusClr, bgcolor=_bgClr, text_size=size.small)
+    if inPosition
+        table.cell(infoTable, 0, 1, 'Entry:',       text_color=color.white, bgcolor=color.new(#1565c0, 10), text_size=size.small)
+        table.cell(infoTable, 1, 1, str.tostring(entryPrice,'#.####'),
+             text_color=color.white, bgcolor=color.new(#1565c0, 10), text_size=size.small)
+        table.cell(infoTable, 0, 2, 'Stop Loss:',   text_color=color.white,  text_size=size.small)
+        table.cell(infoTable, 1, 2, str.tostring(stopLoss,'#.####'),
+             text_color=color.red,    text_size=size.small)
+        table.cell(infoTable, 0, 3, 'Take Profit:', text_color=color.white,  text_size=size.small)
+        table.cell(infoTable, 1, 3, str.tostring(takeProfitFinal,'#.####'),
+             text_color=color.green,  text_size=size.small)
+        riskV   = math.abs(entryPrice - stopLoss)
+        rewardV = math.abs(takeProfitFinal - entryPrice)
+        table.cell(infoTable, 0, 4, 'R:R:', text_color=color.white,  text_size=size.small)
+        table.cell(infoTable, 1, 4, str.tostring(rewardV/riskV,'#.##')+':1',
+             text_color=color.orange, text_size=size.small)
+    ema200S = close > ema200 ? '▲ Above EMA200' : '▼ Below EMA200'
+    ema200C = close > ema200 ? color.teal : color.red
+    table.cell(infoTable, 0, 5, 'EMA200:', text_color=color.white, text_size=size.small)
+    table.cell(infoTable, 1, 5, ema200S,   text_color=ema200C,     text_size=size.small)
+    if showRSI
+        rsiTxt = str.tostring(math.round(rsiVal,2)) + (rsiVal>=rsiOB?' OB':rsiVal<=rsiOS?' OS':'')
+        rsiTC  = rsiVal>=rsiOB ? color.red : rsiVal<=rsiOS ? color.lime : color.white
+        table.cell(infoTable, 0, 6, 'RSI('+str.tostring(rsiLen)+')',
+             text_color=color.white, text_size=size.small)
+        table.cell(infoTable, 1, 6, rsiTxt, text_color=rsiTC, text_size=size.small)
+
+// RSI label — dùng var để chỉ tồn tại 1 label duy nhất, tránh spam
+var label rsiLabel = na
+if showRSI and barstate.islast
+    if not na(rsiLabel)
+        label.delete(rsiLabel)
+    rsiBC = rsiVal>=rsiOB ? color.new(color.red,15) : rsiVal<=rsiOS ? color.new(color.lime,15) : color.new(color.gray,40)
+    rsiLabel := label.new(bar_index+2, high,
+         '📊 RSI '+str.tostring(math.round(rsiVal,1)),
+         style=label.style_label_left,
+         color=rsiBC, textcolor=color.white, size=size.small)
+
+// ============================================
+// ALERTS
+// ============================================
+alertcondition(showBuySignal,   '🟢 BUY Signal',       '📈 BUY on {{ticker}} | Price: {{close}}')
+alertcondition(showSellSignal,  '🔴 SELL Signal',       '📉 SELL on {{ticker}} | Price: {{close}}')
+alertcondition(tpFinalHit,      '🎯 Final Take Profit', '✅ Final TP hit on {{ticker}} | Price: {{close}}')
+alertcondition(slHit,           '❌ Stop Loss',          '🛑 SL triggered on {{ticker}} | Price: {{close}}')
+alertcondition(invalidated,     '⚠️ Entry Invalidated', '⚠️ Previous entry invalidated on {{ticker}}')
+alertcondition(ema200CrossUp,   '📘 Cross EMA200 UP',   '📘 {{ticker}} crossed above EMA200')
+alertcondition(ema200CrossDown, '📕 Cross EMA200 DOWN', '📕 {{ticker}} crossed below EMA200')

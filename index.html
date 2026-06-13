@@ -2936,6 +2936,8 @@ function saveAndConfirmURL() {
 
 // ══════════ JOURNAL ENGINE ══════════
 let trades = JSON.parse(localStorage.getItem('bingxTrades') || '[]');
+let dailyViewMode = 'bar'; // 'bar' | 'calendar'
+let dailySelectedMonth = null; // 'YYYY-MM'
 let syncStatus = 'idle'; // idle | syncing | synced | error
 
 // ── Google Sheets sync ──
@@ -3477,8 +3479,6 @@ if (typeof speechSynthesis !== 'undefined') {
 }
 
 // ── DAILY REPORT ────────────────────────────────────
-let dailyViewMode = 'bar'; // 'bar' | 'calendar'
-let dailySelectedMonth = null; // 'YYYY-MM'
 
 function renderDailyReport() {
   const el = document.getElementById('dailyReport');

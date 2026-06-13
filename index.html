@@ -6,19 +6,19 @@
 <title>Hệ Thống Tập Luyện — Buy Sell Signal v3</title>
 <style>
   :root {
-    --bg: #0a0e17;
-    --bg2: #111827;
-    --bg3: #1a2235;
-    --border: #1e2d45;
-    --accent-blue: #3b82f6;
-    --accent-green: #10b981;
-    --accent-red: #ef4444;
-    --accent-yellow: #f59e0b;
-    --accent-purple: #8b5cf6;
-    --accent-cyan: #06b6d4;
-    --text: #e2e8f0;
+    --bg: #f0f4ff;
+    --bg2: #ffffff;
+    --bg3: #e8edf8;
+    --border: #c5d0e8;
+    --accent-blue: #2563eb;
+    --accent-green: #059669;
+    --accent-red: #dc2626;
+    --accent-yellow: #d97706;
+    --accent-purple: #7c3aed;
+    --accent-cyan: #0891b2;
+    --text: #1e293b;
     --text-muted: #64748b;
-    --text-dim: #94a3b8;
+    --text-dim: #475569;
     --font-mono: 'Courier New', monospace;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -32,7 +32,7 @@
 
   /* ── HEADER ── */
   .header {
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%);
     border-bottom: 1px solid var(--border);
     padding: 16px 28px;
     display: flex;
@@ -175,7 +175,7 @@
 
   /* ── MINI CHART (SVG) ── */
   .mini-chart-wrap {
-    background: #070d1a;
+    background: #f8faff;
     border: 1px solid var(--border);
     border-radius: 10px;
     padding: 12px; overflow: hidden;
@@ -313,7 +313,7 @@
   .squeeze-demo {
     display: flex; align-items: flex-end; gap: 3px;
     padding: 16px 12px 8px;
-    background: #050c18; border-radius: 10px;
+    background: #f0f4ff; border-radius: 10px;
     height: 100px; margin: 10px 0;
     position: relative;
   }
@@ -324,6 +324,7 @@
     position: absolute; top: 6px; left: 12px;
     font-size: 10px; color: var(--text-muted);
     font-family: var(--font-mono);
+    color: var(--text-muted);
   }
 
   /* ── TOOLTIP ── */
@@ -346,6 +347,84 @@
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
   .divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+  /* ── DAILY REPORT ── */
+  .daily-controls {
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 18px;
+  }
+  .daily-month-btn {
+    background: var(--bg3); border: 1px solid var(--border);
+    color: var(--text); padding: 7px 14px; border-radius: 8px;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+  .daily-month-btn:hover { border-color: var(--accent-blue); }
+  .daily-view-toggle {
+    display: flex; gap: 4px; margin-left: auto;
+  }
+  .daily-view-btn {
+    padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 700;
+    cursor: pointer; border: 1px solid var(--border); background: var(--bg3);
+    color: var(--text-muted); transition: all 0.2s;
+  }
+  .daily-view-btn.active { background: var(--accent-blue); border-color: var(--accent-blue); color: #fff; }
+
+  /* Bar chart */
+  .bar-chart-wrap {
+    width: 100%; overflow-x: auto; padding-bottom: 8px;
+  }
+  .bar-chart-svg { display: block; min-width: 360px; }
+
+  /* Calendar */
+  .cal-grid {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 8px;
+  }
+  .cal-header {
+    text-align: center; font-size: 11px; font-weight: 700; color: var(--text-muted);
+    padding: 6px 0; text-transform: uppercase; letter-spacing: 0.8px;
+  }
+  .cal-day {
+    border-radius: 8px; padding: 7px 5px; text-align: center;
+    min-height: 60px; position: relative; font-size: 11px;
+    border: 1px solid transparent; transition: all 0.15s; cursor: default;
+  }
+  .cal-day.empty { background: transparent; border-color: transparent; }
+  .cal-day.no-trade {
+    background: var(--bg3); border-color: var(--border); color: var(--text-muted);
+  }
+  .cal-day.win-day {
+    background: rgba(16,185,129,0.12); border-color: rgba(16,185,129,0.35);
+  }
+  .cal-day.loss-day {
+    background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.3);
+  }
+  .cal-day.flat-day {
+    background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.3);
+  }
+  .cal-day-num {
+    font-size: 12px; font-weight: 700; display: block; margin-bottom: 2px;
+  }
+  .cal-day.win-day .cal-day-num { color: #10b981; }
+  .cal-day.loss-day .cal-day-num { color: #ef4444; }
+  .cal-day.flat-day .cal-day-num { color: #f59e0b; }
+  .cal-day.no-trade .cal-day-num { color: var(--text-muted); }
+  .cal-pnl {
+    font-size: 10px; font-weight: 700; display: block; line-height: 1.3;
+  }
+  .cal-trades-count {
+    font-size: 10px; color: var(--text-muted); display: block;
+  }
+  .cal-today { box-shadow: 0 0 0 2px var(--accent-blue); }
+
+  /* Daily summary row */
+  .daily-summary-row {
+    display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px;
+  }
+  .daily-sum-box {
+    flex: 1; min-width: 90px; background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 12px; text-align: center;
+  }
+  .daily-sum-box .dsval { font-size: 18px; font-weight: 800; }
+  .daily-sum-box .dslbl { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
   .text-green { color: var(--accent-green); }
   .text-red { color: var(--accent-red); }
   .text-yellow { color: var(--accent-yellow); }
@@ -430,6 +509,8 @@
   <button class="nav-btn" onclick="showSection('squeeze')">🔥 Vùng Nén Nến</button>
   <button class="nav-btn" onclick="showSection('rules')">📋 Bộ Luật Cốt Lõi</button>
   <button class="nav-btn" onclick="showSection('quiz')">🎯 Luyện Tập</button>
+  <button class="nav-btn" onclick="showSection('plan')">💰 Kế Hoạch Vốn</button>
+  <button class="nav-btn" onclick="showSection('journal')">📝 Nhật Ký Lệnh</button>
 </div>
 
 <div class="main">
@@ -451,7 +532,7 @@
       <div class="card">
         <div class="card-title"><span>🟢</span> Checklist BUY — Trước Khi Vào Lệnh</div>
         
-        <div class="check-group">
+        <div class="check-group" data-checklist="buy">
           <div class="check-group-title">Xu hướng chính</div>
           <div class="check-item critical" onclick="toggleCheck(this,'buy')">
             <div class="check-box"></div>
@@ -463,14 +544,14 @@
           <div class="check-item" onclick="toggleCheck(this,'buy')">
             <div class="check-box"></div>
             <div class="check-label">
-              <strong>EMA 5 cắt lên trên EMA 13</strong>
+              <strong>EMA 9 cắt lên trên EMA 13</strong>
               <p>Tín hiệu BUY của indicator. Xác nhận bằng nến tăng đóng cửa (confirmCandle = ON).</p>
             </div>
           </div>
           <div class="check-item" onclick="toggleCheck(this,'buy')">
             <div class="check-box"></div>
             <div class="check-label">
-              <strong>Cả 3 EMA xếp thứ tự: EMA5 > EMA13 > EMA200</strong>
+              <strong>Cả 3 EMA xếp thứ tự: EMA9 > EMA13 > EMA200</strong>
               <p>Ba EMA song song hướng lên → xu hướng đồng thuận. Điểm mua mạnh nhất.</p>
             </div>
           </div>
@@ -555,14 +636,14 @@
           <div class="check-item" onclick="toggleCheck(this,'sell')">
             <div class="check-box"></div>
             <div class="check-label">
-              <strong>EMA 5 cắt xuống dưới EMA 13</strong>
+              <strong>EMA 9 cắt xuống dưới EMA 13</strong>
               <p>Tín hiệu SELL của indicator. Nến giảm đóng cửa xác nhận (bearish candle).</p>
             </div>
           </div>
           <div class="check-item" onclick="toggleCheck(this,'sell')">
             <div class="check-box"></div>
             <div class="check-label">
-              <strong>Cả 3 EMA xếp thứ tự: EMA5 &lt; EMA13 &lt; EMA200</strong>
+              <strong>Cả 3 EMA xếp thứ tự: EMA9 &lt; EMA13 &lt; EMA200</strong>
               <p>Ba EMA hướng xuống đồng thuận → cú short mạnh nhất, ít bị pullback.</p>
             </div>
           </div>
@@ -698,9 +779,13 @@
             <!-- EMA13 -->
             <path d="M0,105 Q80,100 160,92 Q240,82 320,72 Q370,66 420,62" stroke="#f97316" stroke-width="1.2" fill="none" opacity="0.9"/>
             <text x="8" y="103" fill="#f97316" font-size="9" opacity="0.8">EMA13</text>
-            <!-- EMA5 -->
+            <!-- EMA9 -->
             <path d="M0,110 Q60,105 120,95 Q180,84 240,70 Q320,56 420,50" stroke="#22c55e" stroke-width="1.2" fill="none" opacity="0.9"/>
-            <text x="8" y="108" fill="#22c55e" font-size="9" opacity="0.8">EMA5</text>
+            <text x="8" y="108" fill="#22c55e" font-size="9" opacity="0.8">EMA9</text>
+            <!-- EMA9/EMA13 Crossover Point (BUY cross ~x=68, y=93) -->
+            <circle cx="68" cy="93" r="5" fill="none" stroke="#fff" stroke-width="1.5" opacity="0.9"/>
+            <circle cx="68" cy="93" r="2.5" fill="#22c55e"/>
+            <text x="74" y="88" fill="#fff" font-size="8" font-weight="700" opacity="0.9">EMA9↗EMA13</text>
             <!-- Support Zone -->
             <rect x="0" y="95" width="200" height="12" fill="#f59e0b" opacity="0.12"/>
             <text x="8" y="107" fill="#f59e0b" font-size="8" opacity="0.7">SUPPORT ZONE</text>
@@ -741,7 +826,7 @@
         </div>
         <div class="cond-row">
           <span class="cond-badge cond-ok">✓ Giá trên EMA200</span>
-          <span class="cond-badge cond-ok">✓ EMA5 > EMA13</span>
+          <span class="cond-badge cond-ok">✓ EMA9 > EMA13</span>
           <span class="cond-badge cond-ok">✓ Support zone rõ</span>
           <span class="cond-badge cond-ok">✓ RSI 54 (>50)</span>
           <span class="cond-badge cond-ok">✓ BUY signal + nến tăng</span>
@@ -751,7 +836,7 @@
         <div class="card-title"><span>🧠</span> Phân Tích Từng Bước</div>
         <ol class="step-list">
           <li><b>Bối cảnh:</b> Giá đang trong uptrend dài hạn, trên EMA200 (xanh). Pullback nhẹ về vùng support vàng.</li>
-          <li><b>Signal xuất hiện:</b> EMA5 cắt lên EMA13, nến tăng xanh đóng cửa → indicator bật nhãn <span class="pill pill-green">BUY</span></li>
+          <li><b>Signal xuất hiện:</b> EMA9 cắt lên EMA13, nến tăng xanh đóng cửa → indicator bật nhãn <span class="pill pill-green">BUY</span></li>
           <li><b>Kiểm tra RSI:</b> RSI tăng từ 42 → 54, vừa vượt 50 → momentum đang chuyển sang tích cực. ✅</li>
           <li><b>Vùng giá:</b> Nến BUY bounce ngay từ mép trên vùng support zone → SL đặt dưới vùng, gọn chỉ 0.5×ATR. ✅</li>
           <li><b>Vào lệnh:</b> Entry = close nến BUY. SL = low − 0.5ATR. TP = Entry + 3×risk. Tất cả điều kiện đủ → <span class="pill pill-green">VÀO LỆNH</span></li>
@@ -779,8 +864,14 @@
             <path d="M0,120 Q200,118 420,116" stroke="#3b82f6" stroke-width="1.5" fill="none" opacity="0.7"/>
             <!-- EMA13 -->
             <path d="M0,100 Q100,98 200,95 Q300,88 420,78" stroke="#f97316" stroke-width="1.2" fill="none"/>
-            <!-- EMA5 -->
+            <text x="340" y="82" fill="#f97316" font-size="8" opacity="0.8">EMA13</text>
+            <!-- EMA9 -->
             <path d="M0,102 Q80,100 160,96 Q200,92 250,85 Q300,76 420,65" stroke="#22c55e" stroke-width="1.2" fill="none"/>
+            <text x="340" y="70" fill="#22c55e" font-size="8" opacity="0.8">EMA9</text>
+            <!-- EMA9/EMA13 Crossover at breakout (~x=85, y=93) -->
+            <circle cx="85" cy="93" r="5" fill="none" stroke="#fff" stroke-width="1.5" opacity="0.9"/>
+            <circle cx="85" cy="93" r="2.5" fill="#22c55e"/>
+            <text x="90" y="88" fill="#fff" font-size="8" font-weight="700" opacity="0.9">Cross↑</text>
             <!-- BB bands -->
             <path d="M30,75 Q80,73 130,72" stroke="#8b5cf6" stroke-width="0.8" fill="none" stroke-dasharray="2,2" opacity="0.6"/>
             <path d="M30,100 Q80,100 130,100" stroke="#8b5cf6" stroke-width="0.8" fill="none" stroke-dasharray="2,2" opacity="0.6"/>
@@ -822,7 +913,7 @@
         <ol class="step-list">
           <li><b>Nhận diện squeeze:</b> 5 nến liên tiếp có thân nhỏ, bóng ngắn, dao động &lt; 0.3×ATR. Bollinger Bands tụ hẹp.</li>
           <li><b>Chờ breakout:</b> Không vào trong vùng nén! Đợi nến phá ra bằng thân to, xác nhận hướng.</li>
-          <li><b>BUY signal xuất hiện:</b> Đúng lúc nến breakout lên → EMA5 vượt EMA13. Tín hiệu + breakout = rất mạnh.</li>
+          <li><b>BUY signal xuất hiện:</b> Đúng lúc nến breakout lên → EMA9 vượt EMA13. Tín hiệu + breakout = rất mạnh.</li>
           <li><b>Volume/momentum:</b> RSI nhảy từ 48 → 59 ngay lập tức → xác nhận lực mua thật. ✅</li>
           <li><b>Entry điểm:</b> Vào ngay close nến breakout. SL dưới vùng nén (low squeeze). TP = 2.5×risk.</li>
           <li><b>Kết quả:</b> Giá tăng nhanh vì áp lực tích lũy được giải phóng → <b class="text-green">WIN +2.5R</b></li>
@@ -850,8 +941,14 @@
             <text x="8" y="56" fill="#3b82f6" font-size="9">EMA200 (trên giá!)</text>
             <!-- EMA13 -->
             <path d="M0,90 Q100,92 200,95 Q300,98 420,100" stroke="#f97316" stroke-width="1.2" fill="none"/>
-            <!-- EMA5 -->
+            <text x="360" y="104" fill="#f97316" font-size="8" opacity="0.8">EMA13</text>
+            <!-- EMA9 -->
             <path d="M0,95 Q100,96 160,98 Q220,94 280,90 Q340,86 420,84" stroke="#22c55e" stroke-width="1.2" fill="none"/>
+            <text x="360" y="88" fill="#22c55e" font-size="8" opacity="0.8">EMA9</text>
+            <!-- False crossover point (~x=68, y=95) — weak cross in downtrend -->
+            <circle cx="68" cy="95" r="5" fill="none" stroke="#f59e0b" stroke-width="1.5" opacity="0.9"/>
+            <circle cx="68" cy="95" r="2" fill="#f59e0b"/>
+            <text x="75" y="100" fill="#f59e0b" font-size="8" font-weight="700">Cross yếu!</text>
             <!-- Resistance zone -->
             <rect x="60" y="55" width="300" height="14" fill="#ef4444" opacity="0.15"/>
             <text x="150" y="53" fill="#ef4444" font-size="9">RESISTANCE ZONE</text>
@@ -875,7 +972,7 @@
             <!-- Would-be SL hit -->
             <text x="160" y="118" fill="#ef4444" font-size="10" font-weight="bold">⚡ SL bị hit</text>
             <!-- Arrow showing what would happen -->
-            <path d="M130,115 Q170,125 210,132" stroke="#ef4444" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+            <path d="M130,115 Q170,125 210,132" stroke="#ef4444" stroke-width="1.5" fill="none"/><polygon points="207,129 215,133 208,137" fill="#ef4444" opacity="0.8"/>
             <text x="8" y="152" fill="#94a3b8" font-size="9">RSI: 38 — dưới 50, chưa phục hồi  |  Giá dưới EMA200 ❌</text>
           </svg>
         </div>
@@ -883,14 +980,14 @@
           <span class="cond-badge cond-no">✗ Giá DƯỚI EMA200</span>
           <span class="cond-badge cond-no">✗ Kháng cự ngay trên</span>
           <span class="cond-badge cond-no">✗ RSI 38 (&lt;50)</span>
-          <span class="cond-badge cond-ok">✓ EMA5 > EMA13</span>
+          <span class="cond-badge cond-ok">✓ EMA9 > EMA13</span>
           <span class="cond-badge cond-warn">~ BUY signal có nhưng yếu</span>
         </div>
       </div>
       <div class="card">
         <div class="card-title"><span>🧠</span> Phân Tích Tín Hiệu Giả</div>
         <ol class="step-list">
-          <li><b>Signal xuất hiện:</b> EMA5 vượt EMA13, indicator bật nhãn BUY. Tưởng vào được.</li>
+          <li><b>Signal xuất hiện:</b> EMA9 vượt EMA13, indicator bật nhãn BUY. Tưởng vào được.</li>
           <li><b>Nhưng nhìn EMA200:</b> Giá đang <b class="text-red">DƯỚI EMA200</b> → đang trong downtrend. Mua ngược xu hướng chính = sai cơ bản.</li>
           <li><b>Kháng cự chặn đầu:</b> Ngay phía trên là Resistance Zone đỏ. Nếu vào, giá chạy được ít sẽ gặp trần.</li>
           <li><b>RSI xác nhận yếu:</b> RSI 38, chưa vượt 50 → momentum vẫn negative. Không có lực mua thật.</li>
@@ -920,8 +1017,14 @@
             <text x="8" y="47" fill="#3b82f6" font-size="9">EMA200</text>
             <!-- EMA13 -->
             <path d="M0,65 Q100,68 200,75 Q300,84 420,96" stroke="#f97316" stroke-width="1.2" fill="none"/>
-            <!-- EMA5 -->
+            <text x="8" y="63" fill="#f97316" font-size="8" opacity="0.8">EMA13</text>
+            <!-- EMA9 -->
             <path d="M0,62 Q80,66 160,74 Q240,84 320,96 Q370,102 420,108" stroke="#22c55e" stroke-width="1.2" fill="none"/>
+            <text x="8" y="74" fill="#22c55e" font-size="8" opacity="0.8">EMA9</text>
+            <!-- SELL crossover: EMA9 crosses DOWN below EMA13 (~x=58, y=78) -->
+            <circle cx="62" cy="78" r="5" fill="none" stroke="#ef4444" stroke-width="1.5" opacity="0.9"/>
+            <circle cx="62" cy="78" r="2.5" fill="#ef4444"/>
+            <text x="68" y="76" fill="#ef4444" font-size="8" font-weight="700">EMA9↘EMA13</text>
             <!-- Resistance zone at top -->
             <rect x="0" y="55" width="180" height="13" fill="#ef4444" opacity="0.15"/>
             <text x="10" y="68" fill="#ef4444" font-size="8">RESISTANCE ZONE</text>
@@ -952,7 +1055,7 @@
           <span class="cond-badge cond-ok">✓ Giá dưới EMA200</span>
           <span class="cond-badge cond-ok">✓ Reject từ Resistance</span>
           <span class="cond-badge cond-ok">✓ RSI 68→44 (rớt qua 50)</span>
-          <span class="cond-badge cond-ok">✓ EMA5 < EMA13</span>
+          <span class="cond-badge cond-ok">✓ EMA9 < EMA13</span>
           <span class="cond-badge cond-ok">✓ Nến bearish xác nhận</span>
         </div>
       </div>
@@ -961,7 +1064,7 @@
         <ol class="step-list">
           <li><b>Bối cảnh:</b> Giá đang dưới EMA200 → downtrend dài hạn. Có đợt hồi phục (pullback) lên vùng kháng cự.</li>
           <li><b>Pullback kiểm tra kháng cự:</b> 3 nến tăng test Resistance Zone nhưng không đóng cửa trên được → vùng kháng cự giữ vững.</li>
-          <li><b>SELL signal kích hoạt:</b> Nến giảm mạnh, EMA5 cắt xuống EMA13 → indicator hiện nhãn <span class="pill pill-red">SELL</span></li>
+          <li><b>SELL signal kích hoạt:</b> Nến giảm mạnh, EMA9 cắt xuống EMA13 → indicator hiện nhãn <span class="pill pill-red">SELL</span></li>
           <li><b>RSI xác nhận:</b> RSI giảm từ 68 (overbought) xuống 44, vượt ngưỡng 50 đi xuống → momentum chuyển âm rõ ràng. ✅</li>
           <li><b>Vào SELL:</b> Entry = close nến bearish lớn. SL = high kháng cự + 0.5ATR. TP = 3R.</li>
           <li><b>Kết quả:</b> Giá tiếp tục giảm về phía support, đạt TP3 → <b class="text-green">WIN +3R</b></li>
@@ -1059,9 +1162,11 @@
             <rect x="0" y="98" width="420" height="14" fill="#f59e0b" opacity="0.2"/>
             <line x1="0" y1="98" x2="420" y2="98" stroke="#f59e0b" stroke-width="1.2" stroke-dasharray="3,2" opacity="0.8"/>
             <text x="8" y="96" fill="#f59e0b" font-size="9" font-weight="bold">SUPPORT ZONE MẠNH</text>
-            <!-- EMA5 / EMA13 -->
+            <!-- EMA9 / EMA13 -->
             <path d="M0,72 Q100,74 200,78 Q300,80 420,82" stroke="#f97316" stroke-width="1.2" fill="none"/>
+            <text x="330" y="86" fill="#f97316" font-size="8" opacity="0.8">EMA13</text>
             <path d="M0,74 Q80,76 160,80 Q240,82 420,85" stroke="#22c55e" stroke-width="1.2" fill="none"/>
+            <text x="330" y="96" fill="#22c55e" font-size="8" opacity="0.8">EMA9</text>
             <!-- Price at support with SELL signal -->
             <rect x="60" y="82" width="7" height="12" fill="#ef4444" rx="1"/>
             <rect x="73" y="85" width="7" height="11" fill="#ef4444" rx="1"/>
@@ -1093,7 +1198,7 @@
       <div class="card">
         <div class="card-title"><span>🧠</span> Không Short Tại Support Mạnh</div>
         <ol class="step-list">
-          <li><b>Có SELL signal:</b> EMA5 cắt xuống EMA13, nến đỏ → indicator bật SELL. Nhìn vào muốn short.</li>
+          <li><b>Có SELL signal:</b> EMA9 cắt xuống EMA13, nến đỏ → indicator bật SELL. Nhìn vào muốn short.</li>
           <li><b>Nhưng nhìn xuống dưới:</b> Giá đang đứng ngay trên <b class="text-yellow">Support Zone vàng mạnh</b>. Nếu short, TP chỉ cách entry vài pip là gặp sàn.</li>
           <li><b>RSI = 34 (oversold):</b> Thị trường đã bị bán quá mức. Oversold = khả năng bounce cao, không phải tiếp tục giảm.</li>
           <li><b>R:R không hợp lý:</b> TP bị chặn bởi support → R:R &lt; 1:1. Đây là lệnh "lỗ tiềm năng &gt; lời tiềm năng".</li>
@@ -1127,7 +1232,7 @@
             <text x="6" y="132" fill="#3b82f6" font-size="8">EMA200</text>
             <!-- EMA13 -->
             <path d="M0,120 Q100,108 220,82 Q320,60 460,48" stroke="#f97316" stroke-width="1.2" fill="none"/>
-            <!-- EMA5 -->
+            <!-- EMA9 -->
             <path d="M0,122 Q80,108 180,78 Q280,52 380,40 Q420,36 460,34" stroke="#22c55e" stroke-width="1.2" fill="none"/>
             <!-- Support zone where BUY signal appeared -->
             <rect x="0" y="110" width="80" height="16" fill="#f59e0b" opacity="0.2"/>
@@ -1325,10 +1430,15 @@
             <rect x="85" y="74" width="6" height="10" fill="#22c55e" rx="1"/>
             <rect x="97" y="72" width="6" height="12" fill="#22c55e" rx="1"/>
             <rect x="109" y="70" width="6" height="10" fill="#22c55e" rx="1"/>
-            <!-- EMA5 crosses EMA13 briefly - false signal -->
+            <!-- EMA9 crosses EMA13 briefly - false signal -->
             <path d="M80,80 Q100,74 130,72 Q150,70 170,78" stroke="#22c55e" stroke-width="1.2" fill="none"/>
+            <text x="8" y="78" fill="#22c55e" font-size="8" opacity="0.8">EMA9</text>
             <path d="M80,82 Q100,78 130,76 Q150,74 170,82" stroke="#f97316" stroke-width="1.2" fill="none"/>
-            <text x="120" y="66" fill="#22c55e" font-size="8">EMA5 vượt EMA13</text>
+            <text x="8" y="88" fill="#f97316" font-size="8" opacity="0.8">EMA13</text>
+            <text x="120" y="66" fill="#f59e0b" font-size="8">EMA9 vượt EMA13 (giả!)</text>
+            <!-- False crossover circle -->
+            <circle cx="130" cy="74" r="5" fill="none" stroke="#f59e0b" stroke-width="1.5" opacity="0.9"/>
+            <circle cx="130" cy="74" r="2" fill="#f59e0b"/>
             <!-- BUY signal label (WRONG) -->
             <rect x="122" y="64" width="9" height="14" fill="#22c55e" rx="1"/>
             <text x="108" y="150" fill="#ef4444" font-size="9" font-weight="700">❌ BUY sai luật!</text>
@@ -1362,7 +1472,7 @@
         <div class="cond-row">
           <span class="cond-badge cond-no">✗ GIÁ DƯỚI EMA200 — VI PHẠM LUẬT 1</span>
           <span class="cond-badge cond-no">✗ EMA200 chặn TP</span>
-          <span class="cond-badge cond-ok">✓ EMA5 > EMA13 (nhỏ)</span>
+          <span class="cond-badge cond-ok">✓ EMA9 > EMA13 (nhỏ)</span>
           <span class="cond-badge cond-warn">~ Bounce ngắn trong downtrend</span>
         </div>
       </div>
@@ -1370,12 +1480,12 @@
         <div class="card-title"><span>🧠</span> Tại Sao EMA200 Là Ranh Giới Tuyệt Đối</div>
         <div class="rule-card red">
           <strong>❌ Vi phạm Luật 1 — Hậu quả không tránh khỏi</strong>
-          BUY khi giá dưới EMA200 = đang cố bơi ngược dòng. Dù signal EMA5/EMA13 có xuất hiện, đó chỉ là bounce nhỏ trong downtrend lớn.
+          BUY khi giá dưới EMA200 = đang cố bơi ngược dòng. Dù signal EMA9/EMA13 có xuất hiện, đó chỉ là bounce nhỏ trong downtrend lớn.
         </div>
         <ol class="step-list">
           <li><b>EMA200 là xu hướng dài hạn:</b> Giá dưới EMA200 = 200 phiên vừa qua xu hướng trung bình đang giảm. Không có lý do mua vào.</li>
           <li><b>EMA200 = kháng cự động:</b> Trong downtrend, mỗi lần giá tiếp cận EMA200 từ dưới → đều bị đẩy xuống trở lại. EMA200 là "trần nhà" trong downtrend.</li>
-          <li><b>Signal nhỏ = bẫy:</b> EMA5 vượt EMA13 chỉ là tín hiệu ngắn hạn. Khi xu hướng lớn (EMA200) ngược lại → tín hiệu ngắn hạn hầu hết đều thất bại.</li>
+          <li><b>Signal nhỏ = bẫy:</b> EMA9 vượt EMA13 chỉ là tín hiệu ngắn hạn. Khi xu hướng lớn (EMA200) ngược lại → tín hiệu ngắn hạn hầu hết đều thất bại.</li>
           <li><b>TP không đến được:</b> Giá tăng lên, chạm EMA200, bị đẩy xuống ngay trước khi đến TP.</li>
           <li><b>Thống kê:</b> BUY dưới EMA200 win rate thực tế &lt; 35%. BUY trên EMA200 win rate &gt; 55–60%.</li>
         </ol>
@@ -1418,7 +1528,7 @@
               <rect x="62" y="104" width="10" height="20" fill="#22c55e" rx="1.5"/>
               <line x1="67" y1="100" x2="67" y2="126" stroke="#22c55e" stroke-width="1.5"/>
               <!-- Entry arrow -->
-              <path d="M45,104 L60,104" stroke="#fff" stroke-width="1.5" fill="none" marker-end="url(#arrowW)"/>
+              <path d="M45,104 L60,104" stroke="#fff" stroke-width="1.5" fill="none"/><polygon points="57,101 63,104 57,107" fill="#fff" opacity="0.8"/>
               <text x="4" y="101" fill="#fff" font-size="9" font-weight="700">① ENTRY</text>
               <text x="4" y="112" fill="#94a3b8" font-size="8">Close nến BUY</text>
               <!-- Entry horizontal line -->
@@ -1610,7 +1720,7 @@
       <tbody>
         <tr>
           <td class="signal-cell text-red">⚡ EMA đảo chiều</td>
-          <td>Đang LONG mà EMA5 cắt xuống EMA13 → indicator báo SELL/INV BUY. Tín hiệu gốc đã bị vô hiệu hóa.<br><br><i style="color:#64748b">Ví dụ: Vào BUY tại giá 100. Sau 5 nến, EMA5 cắt xuống EMA13, indicator hiện "INV BUY" → đóng lệnh ngay dù chưa đến SL.</i></td>
+          <td>Đang LONG mà EMA9 cắt xuống EMA13 → indicator báo SELL/INV BUY. Tín hiệu gốc đã bị vô hiệu hóa.<br><br><i style="color:#64748b">Ví dụ: Vào BUY tại giá 100. Sau 5 nến, EMA9 cắt xuống EMA13, indicator hiện "INV BUY" → đóng lệnh ngay dù chưa đến SL.</i></td>
           <td><span class="pill pill-red">Đóng TOÀN BỘ</span></td>
           <td><span class="pill pill-red">🔴 KHẨN CẤP</span></td>
         </tr>
@@ -1725,7 +1835,7 @@
           <strong>🔍 Dấu hiệu nhận biết vùng nén</strong>
           • Thân nến nhỏ dần (≤ 30% thân nến bình thường)<br>
           • Bóng nến ngắn (giá dao động &lt; 0.5×ATR/nến)<br>
-          • EMA5 và EMA13 đang gần nhau, gần như song song<br>
+          • EMA9 và EMA13 đang gần nhau, gần như song song<br>
           • Có thể kết hợp Bollinger Bands thu hẹp<br>
           • Kéo dài ít nhất 3–6 nến
         </div>
@@ -1936,10 +2046,430 @@
   </div>
 </div>
 
+
+<!-- ══════════════════════════════ SECTION 7: KẾ HOẠCH VỐN ══════════════════════════════ -->
+<div id="section-plan" class="section">
+  <div class="card">
+    <div class="card-title"><span>🎯</span> Mục Tiêu Tăng Vốn — Vốn Khởi Đầu 100 USDT</div>
+    <div class="stat-row">
+      <div class="stat-box" style="border-top:3px solid var(--accent-blue)">
+        <div class="val" style="color:var(--accent-blue)">$100</div>
+        <div class="lbl">Vốn ban đầu</div>
+      </div>
+      <div class="stat-box" style="border-top:3px solid var(--accent-green)">
+        <div class="val" style="color:var(--accent-green)">$1,000</div>
+        <div class="lbl">🎯 Mục tiêu T6/2026</div>
+      </div>
+      <div class="stat-box" style="border-top:3px solid var(--accent-yellow)">
+        <div class="val" style="color:var(--accent-yellow)">$2,000</div>
+        <div class="lbl">🎯 Mục tiêu T7/2026</div>
+      </div>
+      <div class="stat-box" style="border-top:3px solid var(--accent-purple)">
+        <div class="val" style="color:var(--accent-purple)">$5,000</div>
+        <div class="lbl">🎯 Mục tiêu T8/2026</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title"><span>📋</span> Kế Hoạch Chi Tiết Mỗi Lệnh — Vốn $100</div>
+      <table class="exit-table">
+        <thead>
+          <tr>
+            <th>Thông số</th>
+            <th>GOLD (XAU)</th>
+            <th>BTC</th>
+            <th>Altcoin</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>Đòn bẩy khuyến nghị</b></td>
+            <td><span class="pill pill-blue">50×–100×</span></td>
+            <td><span class="pill pill-blue">20×–30×</span></td>
+            <td><span class="pill pill-blue">10×–20×</span></td>
+          </tr>
+          <tr>
+            <td><b>Vốn/lệnh (Margin)</b></td>
+            <td>$5 – $10</td>
+            <td>$5 – $10</td>
+            <td>$3 – $7</td>
+          </tr>
+          <tr>
+            <td><b>Stop Loss (%)</b></td>
+            <td><span class="pill pill-red">0.5% – 1%</span></td>
+            <td><span class="pill pill-red">1% – 1.5%</span></td>
+            <td><span class="pill pill-red">1% – 2%</span></td>
+          </tr>
+          <tr>
+            <td><b>Take Profit TP1</b></td>
+            <td><span class="pill pill-green">1.5% – 2%</span></td>
+            <td><span class="pill pill-green">2% – 3%</span></td>
+            <td><span class="pill pill-green">2% – 4%</span></td>
+          </tr>
+          <tr>
+            <td><b>Take Profit TP2</b></td>
+            <td><span class="pill pill-green">3% – 5%</span></td>
+            <td><span class="pill pill-green">5% – 8%</span></td>
+            <td><span class="pill pill-green">6% – 12%</span></td>
+          </tr>
+          <tr>
+            <td><b>R:R tối thiểu</b></td>
+            <td>1:2</td>
+            <td>1:2.5</td>
+            <td>1:3</td>
+          </tr>
+          <tr>
+            <td><b>Max lệnh/ngày</b></td>
+            <td>3 lệnh</td>
+            <td>2 lệnh</td>
+            <td>2 lệnh</td>
+          </tr>
+          <tr>
+            <td><b>Lỗ tối đa/ngày</b></td>
+            <td colspan="3" style="text-align:center"><span class="pill pill-red">-$10 (10% vốn) → Dừng ngay</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-title"><span>📈</span> Lộ Trình Tăng Trưởng Tháng 6</div>
+        <div style="background:var(--bg3);border-radius:12px;padding:16px;margin-bottom:12px">
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;font-weight:700;text-transform:uppercase;letter-spacing:1px">Tuần 1 — Tuần 2 (1–15/6)</div>
+          <div style="font-size:13px;line-height:1.9">
+            🎯 Mục tiêu: <b style="color:var(--accent-green)">$100 → $400</b><br>
+            • Cần tăng <b>300%</b> trong ~15 ngày<br>
+            • ~5 lệnh thắng/ngày, mỗi lệnh lãi $5–10<br>
+            • Lệnh chuẩn: margin $8–10, TP1 đóng 50%, TP2 để chạy<br>
+            • <b>Chiến lược: Kiên nhẫn chờ TP, không chốt non</b>
+          </div>
+        </div>
+        <div style="background:var(--bg3);border-radius:12px;padding:16px;margin-bottom:12px">
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;font-weight:700;text-transform:uppercase;letter-spacing:1px">Tuần 3 — Tuần 4 (16–30/6)</div>
+          <div style="font-size:13px;line-height:1.9">
+            🎯 Mục tiêu: <b style="color:var(--accent-yellow)">$400 → $1,000</b><br>
+            • Nâng margin/lệnh lên $15–25 khi vốn tăng<br>
+            • Chọn lọc lệnh hơn: chỉ vào khi ≥6/8 điều kiện<br>
+            • Ưu tiên GOLD và BTC — thanh khoản cao<br>
+            • <b>Không trade khi tâm lý không ổn</b>
+          </div>
+        </div>
+        <div class="rule-card green">
+          <strong>✅ Quy tắc Chốt Lệnh Tháng 6</strong>
+          Mỗi lệnh đạt TP1 → Đóng 40%, dời SL về entry. Đạt TP2 → Đóng thêm 40%, để 20% chạy tới TP3. Nếu GOLD hoặc BTC có news mạnh → đóng 100% ngay TP1.
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span>🗓️</span> Kế Hoạch Tháng 7 & 8</div>
+        <table class="exit-table">
+          <thead><tr><th>Tháng</th><th>Vốn đầu tháng</th><th>Mục tiêu</th><th>Tăng trưởng</th><th>Chiến lược</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><b>Tháng 7</b></td>
+              <td>$1,000</td>
+              <td><span class="pill pill-yellow">$2,000</span></td>
+              <td>+100%</td>
+              <td>Margin $30–60/lệnh, max 3 lệnh/ngày</td>
+            </tr>
+            <tr>
+              <td><b>Tháng 8</b></td>
+              <td>$2,000</td>
+              <td><span class="pill pill-purple">$5,000</span></td>
+              <td>+150%</td>
+              <td>Margin $60–150/lệnh, chọn lọc cao</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span>⚡</span> Chiến Lược Vào Lệnh — Chốt Non vs Kiên Nhẫn Chờ TP</div>
+    <div class="grid-3">
+      <div class="rule-card green">
+        <strong>✅ KHI NÀO chờ TP đến cùng</strong>
+        • Xu hướng rõ ràng, EMA200 đồng hướng mạnh<br>
+        • Có squeeze trước signal (breakout mạnh)<br>
+        • GOLD trong phiên London/NY (thanh khoản cao)<br>
+        • RSI chưa overbought/oversold<br>
+        • Không có news lớn trong ngày<br>
+        → <b>Giữ lệnh, trailing stop, chờ TP2/TP3</b>
+      </div>
+      <div class="rule-card yellow">
+        <strong>⚡ KHI NÀO chốt non (partial close)</strong>
+        • Đạt TP1 (+1R) và đang có tin tức sắp ra<br>
+        • Giá tiến chậm, nến giảm nhỏ xuất hiện<br>
+        • RSI sắp chạm overbought/oversold<br>
+        • Lãi đang >15% margin → chốt 50%<br>
+        → <b>Đóng 30–50%, giữ lại 50–70% tiếp tục</b>
+      </div>
+      <div class="rule-card red">
+        <strong>🚫 TUYỆT ĐỐI KHÔNG LÀM</strong>
+        • Dời SL xa hơn khi lệnh đang thua<br>
+        • Thêm margin vào lệnh đang thua (averaging)<br>
+        • Vào lệnh ngay sau khi thua 3 liên tiếp<br>
+        • Trade khi đang tức giận hoặc sợ hãi<br>
+        • Dùng margin >10% tổng vốn cho 1 lệnh<br>
+        → <b>Vi phạm = dừng trading ngay hôm đó</b>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span>📊</span> Kế Hoạch Số Lượng Lệnh Cụ Thể — Vốn $100</div>
+    <table class="exit-table">
+      <thead>
+        <tr>
+          <th>Giai đoạn vốn</th>
+          <th>Margin/lệnh</th>
+          <th>SL (% tài khoản)</th>
+          <th>TP1</th>
+          <th>TP2</th>
+          <th>Lãi nếu đủ TP2</th>
+          <th>Số lệnh cần thắng/ngày</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b>$100 – $200</b></td>
+          <td>$5 – $8</td>
+          <td><span class="pill pill-red">5–8%</span></td>
+          <td>+1.5R (~$7)</td>
+          <td>+3R (~$15)</td>
+          <td>+$15/lệnh</td>
+          <td>~3 lệnh thắng TP2</td>
+        </tr>
+        <tr>
+          <td><b>$200 – $500</b></td>
+          <td>$10 – $20</td>
+          <td><span class="pill pill-red">4–6%</span></td>
+          <td>+1.5R (~$15)</td>
+          <td>+3R (~$30)</td>
+          <td>+$30/lệnh</td>
+          <td>~3 lệnh thắng TP2</td>
+        </tr>
+        <tr>
+          <td><b>$500 – $1,000</b></td>
+          <td>$20 – $40</td>
+          <td><span class="pill pill-red">3–5%</span></td>
+          <td>+1.5R (~$30)</td>
+          <td>+3R (~$60)</td>
+          <td>+$60/lệnh</td>
+          <td>~2 lệnh thắng TP2</td>
+        </tr>
+        <tr>
+          <td><b>$1,000 – $2,000</b></td>
+          <td>$40 – $80</td>
+          <td><span class="pill pill-red">3–4%</span></td>
+          <td>+1.5R (~$60)</td>
+          <td>+3R (~$120)</td>
+          <td>+$120/lệnh</td>
+          <td>~2 lệnh thắng TP2</td>
+        </tr>
+        <tr>
+          <td><b>$2,000 – $5,000</b></td>
+          <td>$80 – $150</td>
+          <td><span class="pill pill-red">2–3%</span></td>
+          <td>+1.5R (~$120)</td>
+          <td>+3R (~$240)</td>
+          <td>+$240/lệnh</td>
+          <td>~2 lệnh thắng TP2</td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="margin-top:14px;font-size:12px;color:var(--text-muted);padding:10px;background:var(--bg3);border-radius:8px">
+      💡 <b>Lưu ý:</b> Tỉ lệ thắng cần đạt tối thiểu <b>60%</b> để đạt mục tiêu. Winrate 55–65% + R:R 2.5:1 = bền vững dài hạn. Không tham lam khi vượt mục tiêu ngày.
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ SECTION 8: NHẬT KÝ LỆNH ══════════════════════════════ -->
+<div id="section-journal" class="section">
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div class="card-title" style="margin-bottom:0"><span>📝</span> Nhập Lệnh Giao Dịch Mới</div>
+      <span id="syncStatus" style="font-size:12px;font-weight:700">⚪ Chưa kết nối Sheets</span>
+    </div>
+    <!-- Google Sheets connect -->
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px">🔗 Kết Nối Google Sheets</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <input type="text" id="sheetsURL" placeholder="Paste Apps Script Web App URL vào đây..." 
+          style="flex:1;min-width:200px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg2);color:var(--text);font-size:12px"
+          oninput="setScriptURL(this.value)">
+        <button onclick="saveAndConfirmURL()"
+          style="background:var(--accent-blue);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">💾 Lưu URL</button>
+        <button onclick="pullFromSheets()"
+          style="background:var(--accent-green);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">⬇️ Tải từ Sheets</button>
+      </div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:8px" id="sheetsURLHint">
+        📌 Chưa có URL? Xem hướng dẫn: <b>Extensions → Apps Script → Deploy → Web App</b> trong Google Sheets của bạn
+      </div>
+    </div>
+    <div class="grid-3" style="gap:12px;align-items:end">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;font-weight:700;text-transform:uppercase">Ngày</label>
+        <input type="date" id="jDate" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:13px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;font-weight:700;text-transform:uppercase">Coin / Pair</label>
+        <select id="jCoin" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:13px">
+          <option value="GOLD">GOLD (XAU)</option>
+          <option value="BTC">BTC</option>
+          <option value="ETH">ETH</option>
+          <option value="SOL">SOL</option>
+          <option value="BNB">BNB</option>
+          <option value="WLD">WLD</option>
+          <option value="MNT">MNT</option>
+          <option value="DOGE">DOGE</option>
+          <option value="Other">Khác</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;font-weight:700;text-transform:uppercase">Hướng lệnh</label>
+        <select id="jSide" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:13px">
+          <option value="LONG">📈 LONG (BUY)</option>
+          <option value="SHORT">📉 SHORT (SELL)</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;font-weight:700;text-transform:uppercase">Đòn bẩy (×)</label>
+        <input type="number" id="jLeverage" placeholder="VD: 50" min="1" max="500" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:13px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;font-weight:700;text-transform:uppercase">Giá vào</label>
+        <input type="number" id="jEntry" placeholder="VD: 3250.5" step="any" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:13px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;font-weight:700;text-transform:uppercase">Stop Loss</label>
+        <input type="number" id="jSL" placeholder="VD: 3230.0" step="any" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:13px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;font-weight:700;text-transform:uppercase">Take Profit</label>
+        <input type="number" id="jTP" placeholder="VD: 3290.0" step="any" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:13px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;font-weight:700;text-transform:uppercase">Margin (USDT)</label>
+        <input type="number" id="jMargin" placeholder="VD: 10" step="any" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:13px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;font-weight:700;text-transform:uppercase">Trạng thái</label>
+        <select id="jStatus" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:13px">
+          <option value="WIN">✅ WIN</option>
+          <option value="LOSS">❌ LOSS</option>
+          <option value="BE">➡️ Hòa vốn (BE)</option>
+          <option value="OPEN">🟡 Đang mở</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;font-weight:700;text-transform:uppercase">Giá đóng</label>
+        <input type="number" id="jClose" placeholder="Giá đóng lệnh" step="any" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:13px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;font-weight:700;text-transform:uppercase">Cảm xúc</label>
+        <select id="jEmotion" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:13px">
+          <option value="😊 Bình tĩnh">😊 Bình tĩnh</option>
+          <option value="🎯 Tập trung">🎯 Tập trung</option>
+          <option value="😰 Sợ">😰 Sợ</option>
+          <option value="😤 FOMO">😤 FOMO</option>
+          <option value="😡 Tức giận">😡 Tức giận</option>
+          <option value="😴 Mệt mỏi">😴 Mệt mỏi</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;font-weight:700;text-transform:uppercase">Ghi chú</label>
+        <input type="text" id="jNote" placeholder="Chiến lược, lý do vào lệnh..." style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:13px">
+      </div>
+    </div>
+    <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
+      <button onclick="addTrade()" style="background:var(--accent-green);color:#fff;border:none;padding:11px 24px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">➕ Thêm lệnh</button>
+      <button onclick="exportCSV()" style="background:var(--accent-blue);color:#fff;border:none;padding:11px 24px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">📥 Xuất CSV</button>
+      <button onclick="clearAllTrades()" style="background:transparent;color:var(--accent-red);border:1px solid var(--accent-red);padding:11px 24px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">🗑 Xoá tất cả</button>
+    </div>
+  </div>
+
+  <!-- Stats summary -->
+  <div class="card">
+    <div class="card-title"><span>📊</span> Tổng Kết Giao Dịch</div>
+    <div class="stat-row" id="journalStats">
+      <div class="stat-box"><div class="val" id="statTotal">0</div><div class="lbl">Tổng lệnh</div></div>
+      <div class="stat-box"><div class="val text-green" id="statWin">0</div><div class="lbl">Thắng</div></div>
+      <div class="stat-box"><div class="val text-red" id="statLoss">0</div><div class="lbl">Thua</div></div>
+      <div class="stat-box"><div class="val text-yellow" id="statWR">0%</div><div class="lbl">Winrate</div></div>
+      <div class="stat-box"><div class="val" id="statPnL">$0</div><div class="lbl">Tổng P&amp;L</div></div>
+      <div class="stat-box"><div class="val" id="statBestDay">–</div><div class="lbl">Lãi ngày tốt nhất</div></div>
+    </div>
+  </div>
+
+  <!-- Tabbed Reports -->
+  <div class="card">
+    <div class="card-title"><span>📈</span> Báo Cáo Chi Tiết</div>
+    <div style="display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap">
+      <button class="ex-btn active" id="rtab-weekly" onclick="showReportTab('weekly',this)">📅 Theo Tuần</button>
+      <button class="ex-btn" id="rtab-monthly" onclick="showReportTab('monthly',this)">🗓 Theo Tháng + Mục Tiêu</button>
+      <button class="ex-btn" id="rtab-coin" onclick="showReportTab('coin',this)">🪙 Theo Coin</button>
+      <button class="ex-btn" id="rtab-daily" onclick="showReportTab('daily',this)">📆 Báo Cáo Ngày</button>
+    </div>
+    <div id="report-weekly"><div id="weeklyReport"><p style="color:var(--text-muted);font-size:13px">Chưa có dữ liệu.</p></div></div>
+    <div id="report-monthly" style="display:none"><div id="monthlyReport"><p style="color:var(--text-muted);font-size:13px">Chưa có dữ liệu.</p></div></div>
+    <div id="report-coin" style="display:none"><div id="coinStats"><p style="color:var(--text-muted);font-size:13px">Chưa có dữ liệu.</p></div></div>
+    <div id="report-daily" style="display:none"><div id="dailyReport"><p style="color:var(--text-muted);font-size:13px">Chưa có dữ liệu.</p></div></div>
+  </div>
+
+  <!-- Journal table -->
+  <div class="card">
+    <div class="card-title"><span>📋</span> Lịch Sử Lệnh</div>
+    <div style="overflow-x:auto">
+      <table class="exit-table" id="journalTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Ngày</th>
+            <th>Coin</th>
+            <th>Side</th>
+            <th>Đòn bẩy</th>
+            <th>Giá vào</th>
+            <th>SL</th>
+            <th>TP</th>
+            <th>%SL</th>
+            <th>%TP</th>
+            <th>R:R</th>
+            <th>Margin</th>
+            <th>Giá đóng</th>
+            <th>P&amp;L (USDT)</th>
+            <th>Trạng thái</th>
+            <th>Cảm xúc</th>
+            <th>Ghi chú</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="journalBody">
+          <tr id="journalEmpty"><td colspan="18" style="text-align:center;color:var(--text-muted);padding:24px">Chưa có lệnh nào. Nhập lệnh đầu tiên ở trên ↑</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+
+</div>
+
 </div><!-- end main -->
 
 <script>
 // ══════════ NAV ══════════
+
+function showReportTab(tab, btn) {
+  ['weekly','monthly','coin','daily'].forEach(t => {
+    document.getElementById('report-' + t).style.display = t === tab ? 'block' : 'none';
+    const b = document.getElementById('rtab-' + t);
+    if (b) b.classList.toggle('active', t === tab);
+  });
+  if (tab === 'daily') renderDailyReport();
+}
+
 function showSection(id) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -1962,7 +2492,7 @@ const criticalItems = { buy: [0, 3], sell: [0, 3] }; // index of critical items 
 
 function toggleCheck(el, side) {
   el.classList.toggle('checked');
-  const items = document.querySelectorAll(`#section-checklist .card:nth-child(${side==='buy'?1:2}) .check-item`);
+  const items = document.querySelectorAll(`[data-checklist="${side}"] .check-item`);
   let count = 0;
   items.forEach(item => { if(item.classList.contains('checked')) count++; });
   updateScore(side, count);
@@ -1978,7 +2508,7 @@ function updateScore(side, count) {
 
   const verdict = document.getElementById(side + '-verdict');
   // Check if critical items are checked
-  const items = document.querySelectorAll(`#section-checklist .card:nth-child(${side==='buy'?1:2}) .check-item`);
+  const items = document.querySelectorAll(`[data-checklist="${side}"] .check-item`);
   let criticalMet = 0;
   [0,3].forEach(i => { if(items[i] && items[i].classList.contains('checked')) criticalMet++; });
 
@@ -2078,7 +2608,7 @@ const questions = [
     q: "📉 Tình huống: Đang trong lệnh LONG, lãi +0.8R. Xuất hiện nhãn 'INV BUY' trên chart. RSI vừa rớt từ 66 xuống 48. Bạn làm gì?",
     options: ["Giữ lệnh vì đang lãi, chờ TP", "Đóng 30% chốt lời một phần", "Đóng TOÀN BỘ lệnh ngay lập tức", "Dời SL về entry rồi chờ tiếp"],
     correct: 2,
-    explanation: "✅ Đúng! 'INV BUY' nghĩa là tín hiệu gốc đã bị vô hiệu hóa — EMA5 vừa cắt xuống EMA13. Đây là tín hiệu thoát khẩn cấp. Đóng ngay, bảo toàn +0.8R còn hơn đợi mất hết."
+    explanation: "✅ Đúng! 'INV BUY' nghĩa là tín hiệu gốc đã bị vô hiệu hóa — EMA9 vừa cắt xuống EMA13. Đây là tín hiệu thoát khẩn cấp. Đóng ngay, bảo toàn +0.8R còn hơn đợi mất hết."
   },
   {
     q: "🟢 Tình huống: BUY signal xuất hiện. Giá trên EMA200. Bounce từ Support Zone. RSI = 52 và đang tăng. Trước đó có 5 nến nén nhỏ. Bạn làm gì?",
@@ -2099,7 +2629,7 @@ const questions = [
     explanation: "✅ Đúng! Đây là bước quản lý lệnh chuẩn: đóng 30% để chốt lời một phần, dời SL về entry để worst case = hòa vốn. Còn lại 70% tiếp tục chạy về TP2, TP-final."
   },
   {
-    q: "🔍 Tình huống: Nhìn chart thấy 6 nến liên tiếp có thân nhỏ, bóng ngắn, dao động rất hẹp. EMA5 và EMA13 đang gần nhau. Giá đang nằm trên Support Zone. Chưa có signal. Bạn làm gì?",
+    q: "🔍 Tình huống: Nhìn chart thấy 6 nến liên tiếp có thân nhỏ, bóng ngắn, dao động rất hẹp. EMA9 và EMA13 đang gần nhau. Giá đang nằm trên Support Zone. Chưa có signal. Bạn làm gì?",
     options: ["Vào BUY ngay vì đang ở support", "Đây là vùng nén — Chờ nến breakout lên + BUY signal mới vào", "Bỏ qua, không có gì để làm", "Đặt limit order mua tại support"],
     correct: 1,
     explanation: "✅ Đúng! Đây là vùng squeeze (nén nến) tại support — setup tiềm năng cao. KHÔNG vào trong vùng nén. Chờ nến breakout lên rõ ràng và có BUY signal → vào lệnh mạnh tay."
@@ -2207,8 +2737,8 @@ const ttsScripts = {
   checklist: () => `
     Checklist BUY — Trước Khi Vào Lệnh.
     Xu hướng chính. Điều kiện BẮT BUỘC số một: Giá trên EMA 200. Giá đóng cửa phải nằm trên EMA 200, nghĩa là đang trong uptrend dài hạn. Mua khi giá ngược EMA 200 tỉ lệ thắng rất thấp.
-    Điều kiện hai: EMA 5 cắt lên trên EMA 13. Đây là tín hiệu BUY của indicator. Cần có nến tăng xác nhận.
-    Điều kiện ba: Cả ba EMA xếp thứ tự EMA 5 lớn hơn EMA 13 lớn hơn EMA 200. Ba EMA song song hướng lên là điểm mua mạnh nhất.
+    Điều kiện hai: EMA 9 cắt lên trên EMA 13. Đây là tín hiệu BUY của indicator. Cần có nến tăng xác nhận.
+    Điều kiện ba: Cả ba EMA xếp thứ tự EMA 9 lớn hơn EMA 13 lớn hơn EMA 200. Ba EMA song song hướng lên là điểm mua mạnh nhất.
     Vùng giá. Điều kiện BẮT BUỘC số bốn: Giá bounce từ vùng Support Zone. Giá chạm vùng hỗ trợ vàng và bật lên. Mua giữa trời không có vùng rất rủi ro.
     Điều kiện năm: Không đang kẹt dưới Resistance Zone. Kháng cự ngay phía trên là trần giá gần, không đủ room để chạy đến Take Profit.
     Điều kiện sáu: Trendline Support giữ vững.
@@ -2216,7 +2746,7 @@ const ttsScripts = {
     Điều kiện tám: RSI vừa thoát oversold từ 30 lên 50. Điều kiện chín: Có vùng nén nến squeeze trước tín hiệu.
     Checklist SELL — Trước Khi Vào Lệnh.
     Điều kiện BẮT BUỘC: Giá dưới EMA 200, đang trong downtrend dài hạn.
-    EMA 5 cắt xuống dưới EMA 13. Giá reject từ vùng Resistance Zone. Bán đúng vùng thì SL gọn, TP rộng.
+    EMA 9 cắt xuống dưới EMA 13. Giá reject từ vùng Resistance Zone. Bán đúng vùng thì SL gọn, TP rộng.
     Nguyên tắc vàng: Tín hiệu cộng Vùng giá thì vào lệnh. RSI xác nhận momentum. EMA 200 là bộ lọc tối thượng.
   `,
   examples: () => {
@@ -2231,7 +2761,7 @@ const ttsScripts = {
   },
   exit: () => `
     Hệ Thống Thoát Lệnh Sớm — Sáu Tín Hiệu Phòng Bị.
-    Tín hiệu một, EMA đảo chiều — Khẩn cấp. Đang LONG mà EMA 5 cắt xuống EMA 13 thì đóng toàn bộ lệnh ngay lập tức. Tín hiệu gốc đã bị vô hiệu hóa.
+    Tín hiệu một, EMA đảo chiều — Khẩn cấp. Đang LONG mà EMA 9 cắt xuống EMA 13 thì đóng toàn bộ lệnh ngay lập tức. Tín hiệu gốc đã bị vô hiệu hóa.
     Tín hiệu hai, RSI đảo chiều mạnh — ưu tiên cao. Đang LONG mà RSI đột ngột rớt xuống dưới 50 thì đóng 50 phần trăm và dời SL.
     Tín hiệu ba, chạm vùng kháng cự mạnh — ưu tiên cao. Chốt lời 50 đến 70 phần trăm.
     Tín hiệu bốn, phá vỡ trendline support — Khẩn cấp. Đóng toàn bộ.
@@ -2243,7 +2773,7 @@ const ttsScripts = {
   squeeze: () => `
     Vùng Nén Nến — Squeeze — Nhận Diện và Vào Lệnh.
     Vùng nén nến là khi thị trường hít thở trước khi bùng nổ. Nhận diện đúng sẽ bắt được con sóng lớn với SL nhỏ nhất.
-    Dấu hiệu nhận biết: Thân nến nhỏ dần, bóng nến ngắn, EMA 5 và EMA 13 đang gần nhau, Bollinger Bands thu hẹp, kéo dài ít nhất 3 đến 6 nến.
+    Dấu hiệu nhận biết: Thân nến nhỏ dần, bóng nến ngắn, EMA 9 và EMA 13 đang gần nhau, Bollinger Bands thu hẹp, kéo dài ít nhất 3 đến 6 nến.
     Cách vào lệnh sau squeeze: Xác định vùng nén, chờ nến breakout với thân to hướng rõ, BUY hoặc SELL signal xuất hiện thì vào lệnh. Không vào trong vùng nén.
     Ba loại squeeze: Loại một tại Support thì BUY breakout, mạnh nhất. Loại hai tại Resistance thì SELL breakout, mạnh. Loại ba giữa trời thì thận trọng.
     Thời gian nén: 3 đến 5 nến ngắn. 6 đến 10 nến là tốt nhất. Trên 10 nến thì breakout thường rất mạnh.
@@ -2365,8 +2895,690 @@ function ttsSetSpeed(section, val) {
   }
 }
 
+
+
+// ══════════ CONFIG — ĐẶT SCRIPT URL CỦA BẠN VÀO ĐÂY ══════════
+// Sau khi deploy Apps Script, paste URL vào đây:
+let APPS_SCRIPT_URL = localStorage.getItem('gsheets_url') || '';
+
+function setScriptURL(url) {
+  APPS_SCRIPT_URL = url.trim();
+  localStorage.setItem('gsheets_url', APPS_SCRIPT_URL);
+}
+
+function saveAndConfirmURL() {
+  setScriptURL(document.getElementById('sheetsURL').value);
+  setSyncStatus('idle');
+  const hint = document.getElementById('sheetsURLHint');
+  if (hint) {
+    hint.innerHTML = '✅ <b style="color:var(--accent-green)">Đã lưu URL! Trang sẽ tự động tải dữ liệu từ Sheets khi reload.</b>';
+  }
+  alert('✅ Đã lưu URL! Tải lại trang để tự động đồng bộ dữ liệu.');
+}
+
+// ══════════ JOURNAL ENGINE ══════════
+let trades = JSON.parse(localStorage.getItem('bingxTrades') || '[]');
+let syncStatus = 'idle'; // idle | syncing | synced | error
+
+// ── Google Sheets sync ──
+async function gsheetPost(payload) {
+  if (!APPS_SCRIPT_URL) return null;
+  try {
+    setSyncStatus('syncing');
+    const res = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+    const json = await res.json();
+    setSyncStatus(json.success ? 'synced' : 'error');
+    return json;
+  } catch(e) {
+    setSyncStatus('error');
+    return null;
+  }
+}
+
+async function gsheetGet(action) {
+  if (!APPS_SCRIPT_URL) return null;
+  try {
+    setSyncStatus('syncing');
+    const res = await fetch(APPS_SCRIPT_URL + '?action=' + action);
+    const json = await res.json();
+    setSyncStatus(json.success ? 'synced' : 'error');
+    return json;
+  } catch(e) {
+    setSyncStatus('error');
+    return null;
+  }
+}
+
+function setSyncStatus(status) {
+  syncStatus = status;
+  const el = document.getElementById('syncStatus');
+  if (!el) return;
+  const map = {
+    idle: '⚪ Chưa kết nối Sheets',
+    syncing: '🔄 Đang đồng bộ...',
+    synced: '✅ Đã đồng bộ Sheets',
+    error: '❌ Lỗi kết nối Sheets'
+  };
+  el.textContent = map[status] || '';
+  el.style.color = status==='synced'?'var(--accent-green)':status==='error'?'var(--accent-red)':status==='syncing'?'var(--accent-yellow)':'var(--text-muted)';
+}
+
+// Map tên cột từ Google Sheet sang tên field của code
+// Sheet dùng: STT, Ngày, Coin, Hướng, Đòn bẩy, Giá vào, Take Profit, Stop Loss, Vốn (USDT), R:R, Trạng thái, Giá đóng, % P&L, Lãi/Lỗ (USDT), Cảm xúc, Ghi chú
+function normalizeTradeRow(t) {
+  if (!t) return null;
+  // Nếu đã có field chuẩn (date, coin, side) thì giữ nguyên
+  if (t.date && t.coin && t.side) return t;
+
+  // Map từ tên cột tiếng Việt trong Sheet sang field code
+  const n = t => (t || '').toString().trim();
+  const f = (v) => parseFloat(n(v).replace(/[^0-9.\-]/g, '')) || 0;
+
+  // Tìm ngày — có thể là "Ngày", "date", "ngay"
+  const dateVal = n(t['Ngày'] || t['ngay'] || t['date'] || t['Date'] || '');
+  if (!dateVal) return null; // bỏ dòng trống
+
+  // Chuẩn hoá ngày từ DD/MM/YYYY sang YYYY-MM-DD
+  let date = dateVal;
+  const dmY = dateVal.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+  if (dmY) date = dmY[3] + '-' + dmY[2].padStart(2,'0') + '-' + dmY[1].padStart(2,'0');
+
+  const coin = n(t['Coin'] || t['coin'] || t['COIN'] || '');
+  if (!coin) return null;
+
+  // Side: "SHORT" / "LONG" hoặc ký hiệu mũi tên từ dropdown
+  let side = n(t['Hướng'] || t['side'] || t['Side'] || t['huong'] || '').toUpperCase();
+  if (!side.includes('LONG') && !side.includes('SHORT')) {
+    side = side.includes('S') ? 'SHORT' : 'LONG';
+  }
+  side = side.includes('SHORT') ? 'SHORT' : 'LONG';
+
+  const lev = f(t['Đòn bẩy'] || t['don_bay'] || t['lev'] || t['Leverage'] || 1);
+  const entry = f(t['Giá vào'] || t['gia_vao'] || t['entry'] || t['Entry'] || 0);
+  const tp = f(t['Take Profit'] || t['tp'] || t['TP'] || 0);
+  const sl = f(t['Stop Loss'] || t['sl'] || t['SL'] || 0);
+
+  // Vốn: thử nhiều tên cột
+  const marginRaw = n(t['Vốn (USDT)'] || t['Margin thực'] || t['margin'] || t['Margin'] || t['von'] || '0');
+  const margin = parseFloat(marginRaw.replace(/[^0-9.\-]/g, '')) || 0;
+
+  const rr = f(t['R:R'] || t['rr'] || t['RR'] || 0);
+
+  // Trạng thái
+  let status = n(t['Trạng thái'] || t['status'] || t['Status'] || t['trang_thai'] || '').toUpperCase();
+  if (!['WIN','LOSS','BE','OPEN'].includes(status)) {
+    status = status.includes('WIN') ? 'WIN' : status.includes('LOSS') ? 'LOSS' : status.includes('BE') ? 'BE' : 'OPEN';
+  }
+
+  const close = f(t['Giá đóng'] || t['close'] || t['Close'] || t['gia_dong'] || 0);
+
+  // P&L: ưu tiên USDT value
+  const pnlRaw = n(t['Lãi/Lỗ (USDT)'] || t['pnl'] || t['PnL'] || t['lai_lo'] || '0');
+  let pnl = parseFloat(pnlRaw.replace(/[^0-9.\-]/g, '')) || 0;
+  // Nếu pnlRaw có dấu trừ thì giữ âm
+  if (pnlRaw.startsWith('-') || pnlRaw.includes('−')) pnl = -Math.abs(pnl);
+
+  const emotion = n(t['Cảm xúc'] || t['emotion'] || t['Emotion'] || t['cam_xuc'] || '');
+  const note = n(t['Ghi chú'] || t['note'] || t['Note'] || t['ghi_chu'] || '');
+
+  // id: dùng STT nếu có, không thì tạo từ timestamp
+  const stt = t['STT'] || t['stt'] || t['id'] || t['#'] || '';
+  const idNum = parseInt(n(stt));
+  const id = (!isNaN(idNum) && idNum > 0) ? idNum : Date.now() + Math.random();
+
+  return { id, date, coin, side, lev, entry, sl, tp, margin, rr, status, close, pnl, emotion, note,
+           slPct: 0, tpPct: 0 };
+}
+
+async function pullFromSheets(silent = false) {
+  const res = await gsheetGet('getAllTrades');
+  showDebugPanel(res);
+
+  // Tìm mảng trades dù Sheets trả về format khác nhau
+  let rawTrades = null;
+  if (res) {
+    if (Array.isArray(res.trades)) rawTrades = res.trades;
+    else if (Array.isArray(res.data)) rawTrades = res.data;
+    else if (Array.isArray(res)) rawTrades = res;
+    else if (res.success === false && res.trades === undefined) rawTrades = [];
+  }
+
+  if (rawTrades !== null) {
+    // Normalize và lọc: bỏ header, dòng trống, dòng không hợp lệ
+    const filtered = rawTrades
+      .map(t => normalizeTradeRow(t))
+      .filter(t => {
+        if (!t) return false;
+        if (!t.date || t.date === '') return false;
+        if (!t.coin || t.coin === '') return false;
+        return true;
+      });
+
+    if (filtered.length > 0) {
+      trades = filtered;
+      localStorage.setItem('bingxTrades', JSON.stringify(trades));
+      renderTrades();
+      updateStats();
+      renderWeeklyReport();
+      renderMonthlyReport();
+      renderCoinStats();
+      const hint = document.getElementById('sheetsURLHint');
+      if (hint) hint.innerHTML = '✅ <b style="color:var(--accent-green)">Đã tải ' + filtered.length + ' lệnh từ Google Sheets.</b>';
+      if (!silent) alert('✅ Đã tải ' + filtered.length + ' lệnh từ Google Sheets!');
+    } else {
+      const hint = document.getElementById('sheetsURLHint');
+      if (hint) hint.innerHTML = '⚠️ <b style="color:var(--accent-yellow)">Kết nối thành công nhưng không parse được dữ liệu. Xem Debug bên dưới.</b>';
+      if (!silent) alert('Kết nối thành công nhưng không parse được dữ liệu. Xem Debug Panel bên dưới.');
+    }
+  } else {
+    setSyncStatus('error');
+    const hint = document.getElementById('sheetsURLHint');
+    if (hint) hint.innerHTML = '❌ <b style="color:var(--accent-red)">Lỗi kết nối hoặc Apps Script trả về sai format. Xem Debug bên dưới.</b>';
+    if (!silent) alert('Lỗi kết nối. Xem Debug Panel bên dưới để biết chi tiết.');
+  }
+}
+
+function showDebugPanel(res) {
+  let panel = document.getElementById('debugPanel');
+  if (!panel) {
+    panel = document.createElement('div');
+    panel.id = 'debugPanel';
+    panel.style.cssText = 'background:#0f172a;border:1px solid #334155;border-radius:12px;padding:16px;margin-top:12px;font-family:monospace;font-size:12px;color:#94a3b8;';
+    const journalCard = document.getElementById('syncStatus')?.closest('.card');
+    if (journalCard) journalCard.appendChild(panel);
+  }
+  const raw = JSON.stringify(res, null, 2);
+  const keys = res ? Object.keys(res) : [];
+  const tradesVal = res?.trades ?? res?.data ?? (Array.isArray(res) ? res : undefined);
+  let summary = '';
+  if (!res) summary = '<span style="color:#ef4444">❌ res = null (fetch thất bại hoàn toàn)</span>';
+  else {
+    summary = `<span style="color:#22c55e">✅ Nhận được response</span><br>`;
+    summary += `Keys: <b style="color:#f8fafc">[${keys.join(', ')}]</b><br>`;
+    summary += `res.success: <b style="color:#f8fafc">${res.success}</b><br>`;
+    summary += `res.trades: <b style="color:#f8fafc">${Array.isArray(res.trades) ? 'Array['+res.trades.length+']' : JSON.stringify(res.trades)}</b><br>`;
+    if (res.data !== undefined) summary += `res.data: <b style="color:#f8fafc">${Array.isArray(res.data) ? 'Array['+res.data.length+']' : JSON.stringify(res.data)}</b><br>`;
+    if (Array.isArray(tradesVal) && tradesVal.length > 0) {
+      summary += `<br><span style="color:#22c55e">Sample row[0] keys: <b>[${Object.keys(tradesVal[0]).join(', ')}]</b></span><br>`;
+    }
+  }
+  panel.innerHTML = `
+    <div style="font-size:11px;font-weight:700;color:#64748b;letter-spacing:1px;margin-bottom:8px;text-transform:uppercase">🔍 Debug — Google Sheets Response</div>
+    <div style="margin-bottom:10px;line-height:1.8">${summary}</div>
+    <details>
+      <summary style="cursor:pointer;color:#60a5fa;font-size:11px">📄 Xem raw JSON đầy đủ</summary>
+      <pre style="margin-top:8px;white-space:pre-wrap;word-break:break-all;color:#94a3b8;font-size:11px;max-height:200px;overflow:auto">${raw.length > 3000 ? raw.slice(0,3000)+'...' : raw}</pre>
+    </details>
+    <button onclick="document.getElementById('debugPanel').remove()" style="margin-top:8px;background:transparent;border:1px solid #334155;color:#64748b;padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer">✕ Đóng debug</button>
+  `;
+}
+
+
+function calcPnL(entry, close, side, leverage, margin) {
+  if (!entry || !close || !margin) return 0;
+  const pct = ((close - entry) / entry) * leverage * (side === 'LONG' ? 1 : -1);
+  return +(pct * margin).toFixed(2);
+}
+
+function calcPct(entry, price, side) {
+  if (!entry || !price) return 0;
+  const pct = ((price - entry) / entry * 100);
+  return side === 'LONG' ? +pct.toFixed(2) : +(-pct).toFixed(2);
+}
+
+async function addTrade() {
+  const date = document.getElementById('jDate').value;
+  const coin = document.getElementById('jCoin').value;
+  const side = document.getElementById('jSide').value;
+  const lev = parseFloat(document.getElementById('jLeverage').value) || 0;
+  const entry = parseFloat(document.getElementById('jEntry').value) || 0;
+  const sl = parseFloat(document.getElementById('jSL').value) || 0;
+  const tp = parseFloat(document.getElementById('jTP').value) || 0;
+  const margin = parseFloat(document.getElementById('jMargin').value) || 0;
+  const status = document.getElementById('jStatus').value;
+  const close = parseFloat(document.getElementById('jClose').value) || 0;
+  const emotion = document.getElementById('jEmotion').value;
+  const note = document.getElementById('jNote').value;
+
+  if (!date || !entry || !margin) { alert('Vui lòng nhập: Ngày, Giá vào, Margin!'); return; }
+
+  const slPct = calcPct(entry, sl, side);
+  const tpPct = calcPct(entry, tp, side);
+  const rr = sl && tp ? +(tpPct / Math.abs(slPct)).toFixed(2) : 0;
+  const pnl = close ? calcPnL(entry, close, side, lev, margin) : 0;
+
+  const trade = { id: Date.now(), date, coin, side, lev, entry, sl, tp, margin, status, close, slPct, tpPct, rr, pnl, emotion, note };
+  trades.push(trade);
+  localStorage.setItem('bingxTrades', JSON.stringify(trades));
+  renderTrades(); updateStats(); renderWeeklyReport(); renderMonthlyReport(); renderCoinStats();
+
+  // Sync to Google Sheets
+  if (APPS_SCRIPT_URL) {
+    const res = await gsheetPost({ action: 'addTrade', trade });
+    if (!res || !res.success) console.warn('Sheets sync failed');
+  }
+
+  ['jLeverage','jEntry','jSL','jTP','jMargin','jClose','jNote'].forEach(id => document.getElementById(id).value = '');
+}
+
+async function deleteTrade(id) {
+  trades = trades.filter(t => t.id !== id);
+  localStorage.setItem('bingxTrades', JSON.stringify(trades));
+  renderTrades(); updateStats(); renderWeeklyReport(); renderMonthlyReport(); renderCoinStats();
+  if (APPS_SCRIPT_URL) await gsheetPost({ action: 'deleteTrade', id });
+}
+
+function renderTrades() {
+  const tbody = document.getElementById('journalBody');
+  if (!tbody) return;
+  if (trades.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="18" style="text-align:center;color:var(--text-muted);padding:24px">Chưa có lệnh nào ↑</td></tr>';
+    return;
+  }
+  tbody.innerHTML = [...trades].reverse().map((t, i) => {
+    const statusCls = t.status==='WIN'?'pill-green':t.status==='LOSS'?'pill-red':t.status==='BE'?'pill-blue':'pill-yellow';
+    const pnlColor = (t.pnl||0) >= 0 ? 'color:var(--accent-green)' : 'color:var(--accent-red)';
+    return `<tr>
+      <td>${trades.length - i}</td><td>${t.date}</td><td><b>${t.coin}</b></td>
+      <td><span class="pill ${t.side==='LONG'?'pill-green':'pill-red'}">${t.side}</span></td>
+      <td>${t.lev}×</td><td>${(t.entry||0).toLocaleString()}</td>
+      <td>${(t.sl||0).toLocaleString()}</td><td>${(t.tp||0).toLocaleString()}</td>
+      <td style="color:var(--accent-red)">${t.slPct||0}%</td>
+      <td style="color:var(--accent-green)">${t.tpPct||0}%</td>
+      <td>${t.rr||0}</td><td>$${t.margin}</td>
+      <td>${(t.close||0).toLocaleString()}</td>
+      <td style="${pnlColor}"><b>${(t.pnl||0)>=0?'+':''}$${(t.pnl||0).toFixed(2)}</b></td>
+      <td><span class="pill ${statusCls}">${t.status}</span></td>
+      <td>${t.emotion||'–'}</td>
+      <td style="font-size:11px;color:var(--text-muted)">${t.note||''}</td>
+      <td><button onclick="deleteTrade(${t.id})" style="background:transparent;border:none;color:var(--accent-red);cursor:pointer;font-size:14px">🗑</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function updateStats() {
+  const wins = trades.filter(t => t.status === 'WIN').length;
+  const losses = trades.filter(t => t.status === 'LOSS').length;
+  const total = trades.length;
+  const wr = total > 0 ? Math.round(wins/total*100) : 0;
+  const totalPnL = trades.reduce((s, t) => s + (t.pnl || 0), 0);
+  const byDay = {};
+  trades.forEach(t => { byDay[t.date] = (byDay[t.date] || 0) + (t.pnl || 0); });
+  const bestDay = Object.values(byDay).length > 0 ? Math.max(...Object.values(byDay)) : 0;
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statWin').textContent = wins;
+  document.getElementById('statLoss').textContent = losses;
+  document.getElementById('statWR').textContent = wr + '%';
+  const pnlEl = document.getElementById('statPnL');
+  pnlEl.textContent = (totalPnL >= 0 ? '+$' : '-$') + Math.abs(totalPnL).toFixed(2);
+  pnlEl.style.color = totalPnL >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+  document.getElementById('statBestDay').textContent = bestDay > 0 ? '+$' + bestDay.toFixed(2) : '–';
+}
+
+// ── WEEKLY REPORT ──────────────────────────────────
+function getWeekKey(dateStr) {
+  const d = new Date(dateStr);
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  const mon = new Date(d.setDate(diff));
+  return mon.toISOString().slice(0, 10);
+}
+
+function renderWeeklyReport() {
+  const el = document.getElementById('weeklyReport');
+  if (!el) return;
+  const weeks = {};
+  trades.forEach(t => {
+    const wk = getWeekKey(t.date);
+    if (!weeks[wk]) weeks[wk] = { trades: [], pnl: 0, wins: 0, losses: 0 };
+    weeks[wk].trades.push(t);
+    weeks[wk].pnl += (t.pnl || 0);
+    if (t.status === 'WIN') weeks[wk].wins++;
+    if (t.status === 'LOSS') weeks[wk].losses++;
+  });
+  const sorted = Object.entries(weeks).sort((a,b) => b[0].localeCompare(a[0])).slice(0, 8);
+  if (sorted.length === 0) { el.innerHTML = '<p style="color:var(--text-muted);font-size:13px">Chưa có dữ liệu.</p>'; return; }
+  el.innerHTML = `<table class="exit-table"><thead><tr>
+    <th>Tuần (Thứ 2)</th><th>Tổng lệnh</th><th>Thắng</th><th>Thua</th><th>Winrate</th><th>P&L (USDT)</th><th>Trung bình/lệnh</th>
+  </tr></thead><tbody>` + sorted.map(([wk, d]) => {
+    const total = d.trades.length;
+    const wr = total > 0 ? Math.round(d.wins/total*100) : 0;
+    const avg = total > 0 ? (d.pnl/total).toFixed(2) : 0;
+    const wrColor = wr >= 60 ? 'var(--accent-green)' : wr >= 45 ? 'var(--accent-yellow)' : 'var(--accent-red)';
+    const pnlColor = d.pnl >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+    return `<tr>
+      <td><b>${wk}</b></td><td>${total}</td>
+      <td style="color:var(--accent-green)">${d.wins}</td>
+      <td style="color:var(--accent-red)">${d.losses}</td>
+      <td style="color:${wrColor};font-weight:700">${wr}%</td>
+      <td style="color:${pnlColor};font-weight:700">${d.pnl >= 0 ? '+' : ''}$${d.pnl.toFixed(2)}</td>
+      <td style="color:${pnlColor}">${avg >= 0 ? '+' : ''}$${avg}</td>
+    </tr>`;
+  }).join('') + '</tbody></table>';
+}
+
+// ── MONTHLY REPORT ─────────────────────────────────
+const GOALS = { '2026-06': 1000, '2026-07': 2000, '2026-08': 5000 };
+const START_CAPITAL = 100;
+
+function renderMonthlyReport() {
+  const el = document.getElementById('monthlyReport');
+  if (!el) return;
+  const months = {};
+  trades.forEach(t => {
+    const mo = t.date.slice(0, 7);
+    if (!months[mo]) months[mo] = { trades: [], pnl: 0, wins: 0, losses: 0 };
+    months[mo].trades.push(t);
+    months[mo].pnl += (t.pnl || 0);
+    if (t.status === 'WIN') months[mo].wins++;
+    if (t.status === 'LOSS') months[mo].losses++;
+  });
+
+  // Cumulative capital
+  let capital = START_CAPITAL;
+  const sorted = Object.entries(months).sort((a,b) => a[0].localeCompare(b[0]));
+
+  el.innerHTML = sorted.length === 0
+    ? '<p style="color:var(--text-muted);font-size:13px">Chưa có dữ liệu.</p>'
+    : `<table class="exit-table"><thead><tr>
+        <th>Tháng</th><th>Tổng lệnh</th><th>Winrate</th><th>P&L</th>
+        <th>Vốn cuối tháng</th><th>Mục tiêu</th><th>Tiến độ</th>
+      </tr></thead><tbody>`
+    + sorted.map(([mo, d]) => {
+        const total = d.trades.length;
+        const wr = total > 0 ? Math.round(d.wins/total*100) : 0;
+        capital += d.pnl;
+        const goal = GOALS[mo];
+        const pct = goal ? Math.min(100, Math.round(capital / goal * 100)) : null;
+        const pnlColor = d.pnl >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+        const goalBar = goal
+          ? `<div style="display:flex;align-items:center;gap:8px">
+              <div style="flex:1;height:8px;background:var(--border);border-radius:99px;overflow:hidden">
+                <div style="height:100%;width:${pct}%;background:${pct>=100?'var(--accent-green)':pct>=60?'var(--accent-yellow)':'var(--accent-blue)'};border-radius:99px"></div>
+              </div>
+              <span style="font-size:11px;font-weight:700;color:${pct>=100?'var(--accent-green)':'var(--text-muted)'}">${pct}%</span>
+            </div>`
+          : '–';
+        const goalLabel = goal
+          ? `<span style="font-size:12px">${goal >= 1000 ? '$'+goal.toLocaleString() : '$'+goal}</span>`
+          : '–';
+        return `<tr>
+          <td><b>${mo}</b></td><td>${total}</td>
+          <td style="color:${wr>=60?'var(--accent-green)':wr>=45?'var(--accent-yellow)':'var(--accent-red)'};font-weight:700">${wr}%</td>
+          <td style="color:${pnlColor};font-weight:700">${d.pnl>=0?'+':''}$${d.pnl.toFixed(2)}</td>
+          <td style="font-weight:800;color:var(--accent-blue)">$${capital.toFixed(2)}</td>
+          <td>${goalLabel}</td>
+          <td style="min-width:120px">${goalBar}</td>
+        </tr>`;
+      }).join('')
+    + '</tbody></table>';
+}
+
+// ── COIN STATS ─────────────────────────────────────
+function renderCoinStats() {
+  const el = document.getElementById('coinStats');
+  if (!el) return;
+  const coins = {};
+  trades.forEach(t => {
+    if (!coins[t.coin]) coins[t.coin] = { trades:0, wins:0, losses:0, pnl:0, margins:[] };
+    const c = coins[t.coin];
+    c.trades++; c.pnl += (t.pnl||0); c.margins.push(t.margin||0);
+    if (t.status==='WIN') c.wins++;
+    if (t.status==='LOSS') c.losses++;
+  });
+  const sorted = Object.entries(coins).sort((a,b) => b[1].trades - a[1].trades);
+  if (sorted.length === 0) { el.innerHTML = '<p style="color:var(--text-muted);font-size:13px">Chưa có dữ liệu.</p>'; return; }
+  el.innerHTML = `<table class="exit-table"><thead><tr>
+    <th>Coin</th><th>Tổng lệnh</th><th>Thắng</th><th>Thua</th>
+    <th>Winrate</th><th>Tổng P&L</th><th>TB margin</th><th>Hiệu suất</th>
+  </tr></thead><tbody>` + sorted.map(([coin, d]) => {
+    const wr = d.trades > 0 ? Math.round(d.wins/d.trades*100) : 0;
+    const avgM = d.margins.length > 0 ? (d.margins.reduce((a,b)=>a+b,0)/d.margins.length).toFixed(1) : 0;
+    const roi = avgM > 0 ? (d.pnl / (d.trades * avgM) * 100).toFixed(1) : 0;
+    const pnlColor = d.pnl >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+    const wrColor = wr >= 60 ? 'var(--accent-green)' : wr >= 45 ? 'var(--accent-yellow)' : 'var(--accent-red)';
+    return `<tr>
+      <td><b style="font-size:14px">${coin}</b></td>
+      <td>${d.trades}</td>
+      <td style="color:var(--accent-green)">${d.wins}</td>
+      <td style="color:var(--accent-red)">${d.losses}</td>
+      <td style="color:${wrColor};font-weight:700">${wr}%</td>
+      <td style="color:${pnlColor};font-weight:700">${d.pnl>=0?'+':''}$${d.pnl.toFixed(2)}</td>
+      <td>$${avgM}</td>
+      <td style="color:${pnlColor}">${roi}%</td>
+    </tr>`;
+  }).join('') + '</tbody></table>';
+}
+
+function exportCSV() {
+  const headers = ['Ngày','Coin','Side','Đòn bẩy','Giá vào','SL','TP','%SL','%TP','R:R','Margin','Giá đóng','P&L (USDT)','Trạng thái','Cảm xúc','Ghi chú'];
+  const rows = trades.map(t => [t.date,t.coin,t.side,t.lev,t.entry,t.sl,t.tp,t.slPct,t.tpPct,t.rr,t.margin,t.close||'',(t.pnl||0).toFixed(2),t.status,t.emotion,t.note||'']);
+  const csv = [headers,...rows].map(r => r.join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'BingX_Journal_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+}
+
+function clearAllTrades() {
+  if (confirm('Xoá toàn bộ nhật ký lệnh? Không thể hoàn tác!')) {
+    trades = [];
+    localStorage.setItem('bingxTrades', JSON.stringify(trades));
+    renderTrades(); updateStats(); renderWeeklyReport(); renderMonthlyReport(); renderCoinStats();
+  }
+}
+
+const today = new Date().toISOString().slice(0,10);
+const jDateEl = document.getElementById('jDate');
+if (jDateEl) jDateEl.value = today;
+
+// ── Tự động điền URL đã lưu vào ô input ──
+const sheetsURLInput = document.getElementById('sheetsURL');
+if (sheetsURLInput && APPS_SCRIPT_URL) {
+  sheetsURLInput.value = APPS_SCRIPT_URL;
+  const hint = document.getElementById('sheetsURLHint');
+  if (hint) hint.innerHTML = '🔗 <b style="color:var(--accent-blue)">URL đã được lưu từ lần trước. Đang tải dữ liệu từ Sheets...</b>';
+}
+
+// ── Render từ localStorage trước để hiện ngay ──
+renderTrades(); updateStats();
+renderWeeklyReport(); renderMonthlyReport(); renderCoinStats();
+
+// ── Nếu đã có URL, tự động tải lại dữ liệu từ Sheets ──
+if (APPS_SCRIPT_URL) {
+  setSyncStatus('syncing');
+  pullFromSheets(true);
+} else {
+  setSyncStatus('idle');
+}
+
 if (typeof speechSynthesis !== 'undefined') {
   speechSynthesis.getVoices();
+}
+
+// ── DAILY REPORT ────────────────────────────────────
+let dailyViewMode = 'bar'; // 'bar' | 'calendar'
+let dailySelectedMonth = null; // 'YYYY-MM'
+
+function renderDailyReport() {
+  const el = document.getElementById('dailyReport');
+  if (!el) return;
+
+  // Collect all months from trades
+  const monthSet = new Set();
+  trades.forEach(t => { if (t.date) monthSet.add(t.date.slice(0,7)); });
+
+  if (monthSet.size === 0) {
+    el.innerHTML = '<p style="color:var(--text-muted);font-size:13px">Chưa có dữ liệu. Hãy thêm lệnh giao dịch trước.</p>';
+    return;
+  }
+
+  const months = Array.from(monthSet).sort().reverse();
+  if (!dailySelectedMonth || !monthSet.has(dailySelectedMonth)) {
+    dailySelectedMonth = months[0];
+  }
+
+  // Build daily data for selected month
+  const byDay = {};
+  trades.filter(t => t.date && t.date.startsWith(dailySelectedMonth)).forEach(t => {
+    if (!byDay[t.date]) byDay[t.date] = { pnl: 0, wins: 0, losses: 0, trades: 0 };
+    const d = byDay[t.date];
+    d.pnl += (t.pnl || 0); d.trades++;
+    if (t.status === 'WIN') d.wins++;
+    if (t.status === 'LOSS') d.losses++;
+  });
+
+  const days = Object.entries(byDay).sort((a,b) => a[0].localeCompare(b[0]));
+  const pnlValues = days.map(([,d]) => d.pnl);
+  const tradeDays = days.length;
+  const winDays = days.filter(([,d]) => d.pnl > 0).length;
+  const lossDays = days.filter(([,d]) => d.pnl < 0).length;
+  const totalPnL = pnlValues.reduce((a,b) => a+b, 0);
+  const bestDay = pnlValues.length ? Math.max(...pnlValues) : 0;
+  const worstDay = pnlValues.length ? Math.min(...pnlValues) : 0;
+
+  // Month labels for buttons
+  const monthBtns = months.map(m => {
+    const [y, mo] = m.split('-');
+    const label = `T${parseInt(mo)}/${y}`;
+    const active = m === dailySelectedMonth ? 'style="background:var(--accent-blue);color:#fff;border-color:var(--accent-blue)"' : '';
+    return `<button class="daily-month-btn" ${active} onclick="dailySelectedMonth='${m}';renderDailyReport()">${label}</button>`;
+  }).join('');
+
+  const summaryHTML = `
+    <div class="daily-summary-row">
+      <div class="daily-sum-box"><div class="dsval" style="color:var(--accent-blue)">${tradeDays}</div><div class="dslbl">Ngày có lệnh</div></div>
+      <div class="daily-sum-box"><div class="dsval" style="color:var(--accent-green)">${winDays}</div><div class="dslbl">Ngày lãi</div></div>
+      <div class="daily-sum-box"><div class="dsval" style="color:var(--accent-red)">${lossDays}</div><div class="dslbl">Ngày lỗ</div></div>
+      <div class="daily-sum-box"><div class="dsval" style="color:${totalPnL>=0?'var(--accent-green)':'var(--accent-red)'}">${totalPnL>=0?'+':''}$${totalPnL.toFixed(2)}</div><div class="dslbl">Tổng P&L</div></div>
+      <div class="daily-sum-box"><div class="dsval" style="color:var(--accent-green)">+$${bestDay.toFixed(2)}</div><div class="dslbl">Ngày tốt nhất</div></div>
+      <div class="daily-sum-box"><div class="dsval" style="color:var(--accent-red)">${worstDay.toFixed(2) === '0.00' ? '–' : '$'+worstDay.toFixed(2)}</div><div class="dslbl">Ngày tệ nhất</div></div>
+    </div>`;
+
+  let chartHTML = '';
+  if (dailyViewMode === 'bar') {
+    chartHTML = renderBarChart(days);
+  } else {
+    chartHTML = renderCalendar(dailySelectedMonth, byDay);
+  }
+
+  el.innerHTML = `
+    <div class="daily-controls">
+      ${monthBtns}
+      <div class="daily-view-toggle">
+        <button class="daily-view-btn ${dailyViewMode==='bar'?'active':''}" onclick="dailyViewMode='bar';renderDailyReport()">📊 Biểu đồ cột</button>
+        <button class="daily-view-btn ${dailyViewMode==='calendar'?'active':''}" onclick="dailyViewMode='calendar';renderDailyReport()">📅 Lịch tháng</button>
+      </div>
+    </div>
+    ${summaryHTML}
+    ${chartHTML}
+  `;
+}
+
+function renderBarChart(days) {
+  if (days.length === 0) return '<p style="color:var(--text-muted);font-size:13px;padding:12px 0">Không có giao dịch trong tháng này.</p>';
+
+  const maxAbs = Math.max(...days.map(([,d]) => Math.abs(d.pnl)), 0.01);
+  const BAR_W = 36, BAR_GAP = 10, CHART_H = 200, AXIS_H = 24, LABEL_H = 36;
+  const totalW = days.length * (BAR_W + BAR_GAP) + 60;
+  const midY = CHART_H / 2;
+
+  let bars = '';
+  days.forEach(([date, d], i) => {
+    const x = 40 + i * (BAR_W + BAR_GAP);
+    const pnl = d.pnl;
+    const ratio = Math.abs(pnl) / maxAbs;
+    const barH = Math.max(3, Math.round(ratio * (midY - 10)));
+    const isPos = pnl >= 0;
+    const color = isPos ? '#10b981' : '#ef4444';
+    const barY = isPos ? midY - barH : midY;
+    const dayNum = date.slice(8);
+    const label = (pnl >= 0 ? '+' : '') + '$' + Math.abs(pnl).toFixed(1);
+
+    // Bar
+    bars += `<rect x="${x}" y="${barY}" width="${BAR_W}" height="${barH}" rx="4" fill="${color}" opacity="0.85"/>`;
+    // Value label
+    const lblY = isPos ? barY - 4 : barY + barH + 12;
+    bars += `<text x="${x + BAR_W/2}" y="${lblY}" text-anchor="middle" fill="${color}" font-size="9" font-weight="700">${label}</text>`;
+    // Date label
+    bars += `<text x="${x + BAR_W/2}" y="${CHART_H + AXIS_H + 4}" text-anchor="middle" fill="#64748b" font-size="10">${dayNum}</text>`;
+    // Trade count dot
+    if (d.trades > 0) {
+      bars += `<text x="${x + BAR_W/2}" y="${CHART_H + AXIS_H + 16}" text-anchor="middle" fill="#94a3b8" font-size="9">${d.trades}lệnh</text>`;
+    }
+  });
+
+  // Y-axis labels
+  const yLabels = [
+    { y: 10, val: '+$' + maxAbs.toFixed(1), color: '#10b981' },
+    { y: midY, val: '$0', color: '#94a3b8' },
+    { y: CHART_H - 10, val: '-$' + maxAbs.toFixed(1), color: '#ef4444' },
+  ];
+  let yAxisHtml = yLabels.map(l =>
+    `<text x="36" y="${l.y + 4}" text-anchor="end" fill="${l.color}" font-size="9" font-weight="700">${l.val}</text>`
+  ).join('');
+
+  const svgH = CHART_H + AXIS_H + LABEL_H;
+  return `
+    <div class="bar-chart-wrap">
+      <svg class="bar-chart-svg" viewBox="0 0 ${Math.max(totalW, 400)} ${svgH}" xmlns="http://www.w3.org/2000/svg">
+        <!-- Grid lines -->
+        <line x1="40" y1="${midY}" x2="${totalW}" y2="${midY}" stroke="#334155" stroke-width="1.5" stroke-dasharray="4,3"/>
+        <line x1="40" y1="10" x2="${totalW}" y2="10" stroke="#1e293b" stroke-width="0.8"/>
+        <line x1="40" y1="${CHART_H-10}" x2="${totalW}" y2="${CHART_H-10}" stroke="#1e293b" stroke-width="0.8"/>
+        <!-- Left axis -->
+        <line x1="40" y1="0" x2="40" y2="${CHART_H}" stroke="#334155" stroke-width="1"/>
+        ${yAxisHtml}
+        ${bars}
+      </svg>
+    </div>`;
+}
+
+function renderCalendar(monthStr, byDay) {
+  const [year, month] = monthStr.split('-').map(Number);
+  const firstDay = new Date(year, month - 1, 1).getDay(); // 0=Sun
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const today = new Date().toISOString().slice(0, 10);
+  const adjustedFirst = (firstDay === 0 ? 6 : firstDay - 1); // Mon=0
+
+  const headers = ['T2','T3','T4','T5','T6','T7','CN'].map(d =>
+    `<div class="cal-header">${d}</div>`
+  ).join('');
+
+  let cells = Array(adjustedFirst).fill('<div class="cal-day empty"></div>');
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const data = byDay[dateStr];
+    const isToday = dateStr === today;
+    let cls = 'cal-day no-trade';
+    let inner = '';
+    if (data) {
+      const pnl = data.pnl;
+      cls = `cal-day ${pnl > 0 ? 'win-day' : pnl < 0 ? 'loss-day' : 'flat-day'}`;
+      const sign = pnl >= 0 ? '+' : '';
+      inner = `<span class="cal-pnl">${sign}$${Math.abs(pnl).toFixed(2)}</span><span class="cal-trades-count">${data.trades} lệnh</span>`;
+    }
+    if (isToday) cls += ' cal-today';
+    cells.push(`<div class="${cls}"><span class="cal-day-num">${d}</span>${inner}</div>`);
+  }
+
+  // Legend
+  const legend = `
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:14px;font-size:11px;color:var(--text-muted)">
+      <span><span style="display:inline-block;width:12px;height:12px;background:rgba(16,185,129,0.25);border:1px solid rgba(16,185,129,0.4);border-radius:3px;vertical-align:middle;margin-right:4px"></span>Ngày lãi</span>
+      <span><span style="display:inline-block;width:12px;height:12px;background:rgba(239,68,68,0.18);border:1px solid rgba(239,68,68,0.35);border-radius:3px;vertical-align:middle;margin-right:4px"></span>Ngày lỗ</span>
+      <span><span style="display:inline-block;width:12px;height:12px;background:rgba(245,158,11,0.18);border:1px solid rgba(245,158,11,0.35);border-radius:3px;vertical-align:middle;margin-right:4px"></span>Hòa vốn</span>
+      <span><span style="display:inline-block;width:12px;height:12px;background:var(--bg3);border:1px solid var(--border);border-radius:3px;vertical-align:middle;margin-right:4px"></span>Không có lệnh</span>
+    </div>`;
+
+  return `
+    <div style="max-width:700px">
+      <div class="cal-grid">${headers}${cells.join('')}</div>
+      ${legend}
+    </div>`;
 }
 </script>
 </body>

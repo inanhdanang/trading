@@ -80,6 +80,14 @@
 
   /* ── MAIN ── */
   .main { padding: 24px 28px; max-width: 1200px; margin: 0 auto; }
+  @media(max-width: 768px) {
+    .main { padding: 16px 12px; }
+    .card { padding: 14px 12px; }
+  }
+
+  /* Wrap any table-containing report block so wide tables scroll instead of stretching the page */
+  .report-scroll { width: 100%; overflow-x: auto; }
+  .report-scroll .exit-table { min-width: 560px; }
 
   /* ── SECTIONS ── */
   .section { display: none; }
@@ -414,6 +422,13 @@
     font-size: 10px; color: var(--text-muted); display: block;
   }
   .cal-today { box-shadow: 0 0 0 2px var(--accent-blue); }
+
+  @media(max-width: 480px) {
+    .cal-day { min-height: 46px; padding: 4px 2px; font-size: 9px; }
+    .cal-day-num { font-size: 10px; }
+    .daily-sum-box { min-width: 70px; padding: 8px 6px; }
+    .daily-sum-box .dsval { font-size: 14px; }
+  }
 
   /* Daily summary row */
   .daily-summary-row {
@@ -2304,6 +2319,8 @@
           style="background:var(--accent-blue);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">💾 Lưu URL</button>
         <button onclick="pullFromSheets()"
           style="background:var(--accent-green);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">⬇️ Tải từ Sheets</button>
+        <button onclick="syncAllToSheets()"
+          style="background:var(--accent-purple);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">⬆️ Đẩy tất cả lên Sheets</button>
       </div>
       <div style="font-size:11px;color:var(--text-muted);margin-top:8px" id="sheetsURLHint">
         📌 Chưa có URL? Xem hướng dẫn: <b>Extensions → Apps Script → Deploy → Web App</b> trong Google Sheets của bạn
@@ -2316,17 +2333,17 @@
       </div>
       <div>
         <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;font-weight:700;text-transform:uppercase">Coin / Pair</label>
-        <select id="jCoin" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:13px">
-          <option value="GOLD">GOLD (XAU)</option>
-          <option value="BTC">BTC</option>
-          <option value="ETH">ETH</option>
-          <option value="SOL">SOL</option>
-          <option value="BNB">BNB</option>
-          <option value="WLD">WLD</option>
-          <option value="MNT">MNT</option>
-          <option value="DOGE">DOGE</option>
-          <option value="Other">Khác</option>
-        </select>
+        <input type="text" id="jCoin" list="jCoinList" placeholder="VD: BTC, ETH, GOLD..." autocomplete="off" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:13px;text-transform:uppercase">
+        <datalist id="jCoinList">
+          <option value="GOLD">
+          <option value="BTC">
+          <option value="ETH">
+          <option value="SOL">
+          <option value="BNB">
+          <option value="WLD">
+          <option value="MNT">
+          <option value="DOGE">
+        </datalist>
       </div>
       <div>
         <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;font-weight:700;text-transform:uppercase">Hướng lệnh</label>
@@ -2408,15 +2425,15 @@
   <div class="card">
     <div class="card-title"><span>📈</span> Báo Cáo Chi Tiết</div>
     <div style="display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap">
-      <button class="ex-btn active" id="rtab-weekly" onclick="showReportTab('weekly',this)">📅 Theo Tuần</button>
+      <button class="ex-btn active" id="rtab-daily" onclick="showReportTab('daily',this)">📆 Báo Cáo Ngày</button>
+      <button class="ex-btn" id="rtab-weekly" onclick="showReportTab('weekly',this)">📅 Theo Tuần</button>
       <button class="ex-btn" id="rtab-monthly" onclick="showReportTab('monthly',this)">🗓 Theo Tháng + Mục Tiêu</button>
       <button class="ex-btn" id="rtab-coin" onclick="showReportTab('coin',this)">🪙 Theo Coin</button>
-      <button class="ex-btn" id="rtab-daily" onclick="showReportTab('daily',this)">📆 Báo Cáo Ngày</button>
     </div>
-    <div id="report-weekly"><div id="weeklyReport"><p style="color:var(--text-muted);font-size:13px">Chưa có dữ liệu.</p></div></div>
-    <div id="report-monthly" style="display:none"><div id="monthlyReport"><p style="color:var(--text-muted);font-size:13px">Chưa có dữ liệu.</p></div></div>
-    <div id="report-coin" style="display:none"><div id="coinStats"><p style="color:var(--text-muted);font-size:13px">Chưa có dữ liệu.</p></div></div>
     <div id="report-daily" style="display:none"><div id="dailyReport"><p style="color:var(--text-muted);font-size:13px">Chưa có dữ liệu.</p></div></div>
+    <div id="report-weekly" style="display:none"><div class="report-scroll"><div id="weeklyReport"><p style="color:var(--text-muted);font-size:13px">Chưa có dữ liệu.</p></div></div></div>
+    <div id="report-monthly" style="display:none"><div class="report-scroll"><div id="monthlyReport"><p style="color:var(--text-muted);font-size:13px">Chưa có dữ liệu.</p></div></div></div>
+    <div id="report-coin" style="display:none"><div class="report-scroll"><div id="coinStats"><p style="color:var(--text-muted);font-size:13px">Chưa có dữ liệu.</p></div></div></div>
   </div>
 
   <!-- Journal table -->
@@ -2925,16 +2942,26 @@ async function gsheetPost(payload) {
   if (!APPS_SCRIPT_URL) return null;
   try {
     setSyncStatus('syncing');
+    // Gửi dạng form-encoded (payload=...) để tránh CORS preflight VÀ tránh mất method khi Apps Script redirect
+    const body = 'payload=' + encodeURIComponent(JSON.stringify(payload));
     const res = await fetch(APPS_SCRIPT_URL, {
       method: 'POST',
-      body: JSON.stringify(payload)
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body
     });
-    const json = await res.json();
+    const text = await res.text();
+    let json;
+    try {
+      json = JSON.parse(text);
+    } catch(parseErr) {
+      setSyncStatus('error');
+      return { success: false, error: 'Response không phải JSON (HTTP ' + res.status + '): ' + text.slice(0, 300) };
+    }
     setSyncStatus(json.success ? 'synced' : 'error');
     return json;
   } catch(e) {
     setSyncStatus('error');
-    return null;
+    return { success: false, error: 'fetch_failed: ' + e.message };
   }
 }
 
@@ -2943,12 +2970,19 @@ async function gsheetGet(action) {
   try {
     setSyncStatus('syncing');
     const res = await fetch(APPS_SCRIPT_URL + '?action=' + action);
-    const json = await res.json();
+    const text = await res.text();
+    let json;
+    try {
+      json = JSON.parse(text);
+    } catch(parseErr) {
+      setSyncStatus('error');
+      return { success: false, error: 'Response không phải JSON (HTTP ' + res.status + '): ' + text.slice(0, 300) };
+    }
     setSyncStatus(json.success ? 'synced' : 'error');
     return json;
   } catch(e) {
     setSyncStatus('error');
-    return null;
+    return { success: false, error: 'fetch_failed: ' + e.message };
   }
 }
 
@@ -3055,16 +3089,19 @@ async function pullFromSheets(silent = false) {
         if (!t.date || t.date === '') return false;
         if (!t.coin || t.coin === '') return false;
         return true;
-      });
+      })
+      .map(t => ({ ...t, synced: true }));
 
     if (filtered.length > 0) {
-      trades = filtered;
+      const unsyncedLocal = trades.filter(t => !t.synced);
+      trades = [...filtered, ...unsyncedLocal];
       localStorage.setItem('bingxTrades', JSON.stringify(trades));
       renderTrades();
       updateStats();
       renderWeeklyReport();
       renderMonthlyReport();
       renderCoinStats();
+      renderDailyReport();
       const hint = document.getElementById('sheetsURLHint');
       if (hint) hint.innerHTML = '✅ <b style="color:var(--accent-green)">Đã tải ' + filtered.length + ' lệnh từ Google Sheets.</b>';
       if (!silent) alert('✅ Đã tải ' + filtered.length + ' lệnh từ Google Sheets!');
@@ -3129,9 +3166,40 @@ function calcPct(entry, price, side) {
   return side === 'LONG' ? +pct.toFixed(2) : +(-pct).toFixed(2);
 }
 
+async function syncAllToSheets() {
+  if (!APPS_SCRIPT_URL) { alert('Vui lòng nhập và lưu URL Apps Script trước!'); return; }
+  const unsynced = trades.filter(t => !t.synced);
+  const hint = document.getElementById('sheetsURLHint');
+  if (unsynced.length === 0) {
+    if (hint) hint.innerHTML = '✅ <b style="color:var(--accent-green)">Tất cả lệnh đã được đồng bộ lên Sheets.</b>';
+    alert('✅ Tất cả lệnh đã được đồng bộ lên Sheets, không có lệnh mới cần đẩy.');
+    return;
+  }
+  // Đánh số lại ID liên tục dựa trên các lệnh đã đồng bộ (để khớp cột STT trên Sheet)
+  const maxSyncedId = trades.filter(t => t.synced).reduce((m, t) => Math.max(m, Number(t.id) || 0), 0);
+  unsynced.forEach((t, i) => { t.id = maxSyncedId + i + 1; });
+  localStorage.setItem('bingxTrades', JSON.stringify(trades));
+  renderTrades();
+
+  if (hint) hint.innerHTML = '🔄 <b style="color:var(--accent-yellow)">Đang đẩy ' + unsynced.length + ' lệnh mới lên Sheets...</b>';
+  const res = await gsheetPost({ action: 'batchAddTrades', trades: unsynced });
+  showDebugPanel(res);
+  if (res && res.success) {
+    unsynced.forEach(t => t.synced = true);
+    localStorage.setItem('bingxTrades', JSON.stringify(trades));
+    const ids = unsynced.map(t => t.id).join(', ');
+    if (hint) hint.innerHTML = '✅ <b style="color:var(--accent-green)">Đã đồng bộ ' + unsynced.length + ' lệnh mới lên Google Sheets (ID: ' + ids + ').</b>';
+    alert('✅ Đã đồng bộ ' + unsynced.length + ' lệnh mới lên Google Sheets!\n\nID lệnh (cột A trên Sheet): ' + ids + '\n\nNếu không thấy trên Sheet, hãy mở Apps Script → Executions để xem log lỗi.');
+  } else {
+    const errMsg = res ? (res.error || JSON.stringify(res)) : 'Không nhận được phản hồi (fetch thất bại / null)';
+    if (hint) hint.innerHTML = '⚠️ <b style="color:var(--accent-yellow)">Đồng bộ thất bại: ' + errMsg + '</b> — Xem chi tiết ở Debug panel bên dưới.';
+    alert('⚠️ Đồng bộ thất bại.\n\nChi tiết lỗi: ' + errMsg + '\n\nXem thêm ở Debug panel (cuộn xuống dưới khung Kết Nối Google Sheets).');
+  }
+}
+
 async function addTrade() {
   const date = document.getElementById('jDate').value;
-  const coin = document.getElementById('jCoin').value;
+  const coin = document.getElementById('jCoin').value.trim().toUpperCase();
   const side = document.getElementById('jSide').value;
   const lev = parseFloat(document.getElementById('jLeverage').value) || 0;
   const entry = parseFloat(document.getElementById('jEntry').value) || 0;
@@ -3143,22 +3211,30 @@ async function addTrade() {
   const emotion = document.getElementById('jEmotion').value;
   const note = document.getElementById('jNote').value;
 
-  if (!date || !entry || !margin) { alert('Vui lòng nhập: Ngày, Giá vào, Margin!'); return; }
+  if (!date || !coin || !entry || !margin) { alert('Vui lòng nhập: Ngày, Coin/Pair, Giá vào, Margin!'); return; }
 
   const slPct = calcPct(entry, sl, side);
   const tpPct = calcPct(entry, tp, side);
   const rr = sl && tp ? +(tpPct / Math.abs(slPct)).toFixed(2) : 0;
   const pnl = close ? calcPnL(entry, close, side, lev, margin) : 0;
 
-  const trade = { id: Date.now(), date, coin, side, lev, entry, sl, tp, margin, status, close, slPct, tpPct, rr, pnl, emotion, note };
+  const maxId = trades.reduce((m, t) => Math.max(m, Number(t.id) || 0), 0);
+  const trade = { id: maxId + 1, date, coin, side, lev, entry, sl, tp, margin, status, close, slPct, tpPct, rr, pnl, emotion, note, synced: false };
   trades.push(trade);
   localStorage.setItem('bingxTrades', JSON.stringify(trades));
-  renderTrades(); updateStats(); renderWeeklyReport(); renderMonthlyReport(); renderCoinStats();
+  renderTrades(); updateStats(); renderWeeklyReport(); renderMonthlyReport(); renderCoinStats(); renderDailyReport();
 
   // Sync to Google Sheets
   if (APPS_SCRIPT_URL) {
     const res = await gsheetPost({ action: 'addTrade', trade });
-    if (!res || !res.success) console.warn('Sheets sync failed');
+    if (res && res.success) {
+      trade.synced = true;
+      localStorage.setItem('bingxTrades', JSON.stringify(trades));
+    } else {
+      console.warn('Sheets sync failed');
+      const hint = document.getElementById('sheetsURLHint');
+      if (hint) hint.innerHTML = '⚠️ <b style="color:var(--accent-yellow)">Đã lưu trên trình duyệt nhưng đồng bộ lên Sheets thất bại. Bấm "⬆️ Đẩy tất cả lên Sheets" để thử lại.</b>';
+    }
   }
 
   ['jLeverage','jEntry','jSL','jTP','jMargin','jClose','jNote'].forEach(id => document.getElementById(id).value = '');
@@ -3167,7 +3243,7 @@ async function addTrade() {
 async function deleteTrade(id) {
   trades = trades.filter(t => t.id !== id);
   localStorage.setItem('bingxTrades', JSON.stringify(trades));
-  renderTrades(); updateStats(); renderWeeklyReport(); renderMonthlyReport(); renderCoinStats();
+  renderTrades(); updateStats(); renderWeeklyReport(); renderMonthlyReport(); renderCoinStats(); renderDailyReport();
   if (APPS_SCRIPT_URL) await gsheetPost({ action: 'deleteTrade', id });
 }
 
@@ -3367,7 +3443,7 @@ function clearAllTrades() {
   if (confirm('Xoá toàn bộ nhật ký lệnh? Không thể hoàn tác!')) {
     trades = [];
     localStorage.setItem('bingxTrades', JSON.stringify(trades));
-    renderTrades(); updateStats(); renderWeeklyReport(); renderMonthlyReport(); renderCoinStats();
+    renderTrades(); updateStats(); renderWeeklyReport(); renderMonthlyReport(); renderCoinStats(); renderDailyReport();
   }
 }
 
@@ -3385,7 +3461,7 @@ if (sheetsURLInput && APPS_SCRIPT_URL) {
 
 // ── Render từ localStorage trước để hiện ngay ──
 renderTrades(); updateStats();
-renderWeeklyReport(); renderMonthlyReport(); renderCoinStats();
+renderWeeklyReport(); renderMonthlyReport(); renderCoinStats(); renderDailyReport();
 
 // ── Nếu đã có URL, tự động tải lại dữ liệu từ Sheets ──
 if (APPS_SCRIPT_URL) {
@@ -3558,8 +3634,9 @@ function renderCalendar(monthStr, byDay) {
     if (data) {
       const pnl = data.pnl;
       cls = `cal-day ${pnl > 0 ? 'win-day' : pnl < 0 ? 'loss-day' : 'flat-day'}`;
-      const sign = pnl >= 0 ? '+' : '';
-      inner = `<span class="cal-pnl">${sign}$${Math.abs(pnl).toFixed(2)}</span><span class="cal-trades-count">${data.trades} lệnh</span>`;
+      const sign = pnl >= 0 ? '+' : '-';
+      const pnlStyle = pnl < 0 ? ' style="color:#fca5a5"' : '';
+      inner = `<span class="cal-pnl"${pnlStyle}>${sign}$${Math.abs(pnl).toFixed(2)}</span><span class="cal-trades-count">${data.trades} lệnh</span>`;
     }
     if (isToday) cls += ' cal-today';
     cells.push(`<div class="${cls}"><span class="cal-day-num">${d}</span>${inner}</div>`);

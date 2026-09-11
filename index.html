@@ -246,6 +246,61 @@
     font-size:13px;
   }
 
+  /* ---------- lightbox ---------- */
+  figure img{ cursor:zoom-in; }
+
+  .lightbox{
+    position:fixed; inset:0; z-index:100;
+    background:rgba(6,9,13,0.92);
+    display:none;
+    align-items:center; justify-content:center;
+    overflow:hidden;
+  }
+  .lightbox.open{ display:flex; }
+  .lightbox-stage{
+    width:100%; height:100%;
+    display:flex; align-items:center; justify-content:center;
+    overflow:auto;
+    cursor:zoom-in;
+    touch-action:pan-x pan-y;
+  }
+  .lightbox-stage.zoomed{ cursor:zoom-out; align-items:flex-start; justify-content:flex-start; }
+  .lightbox img{
+    max-width:min(90vw,560px);
+    max-height:85vh;
+    border-radius:6px;
+    border:1px solid var(--line);
+    user-select:none;
+    -webkit-user-drag:none;
+    transition:max-width .18s ease, max-height .18s ease;
+  }
+  .lightbox-stage.zoomed img{
+    max-width:none; max-height:none;
+    width:auto; height:auto;
+    transform:scale(2.2);
+    transform-origin:top left;
+  }
+  .lightbox-close{
+    position:fixed; top:20px; right:24px; z-index:101;
+    width:38px; height:38px; border-radius:50%;
+    border:1px solid var(--line);
+    background:var(--panel);
+    color:var(--text);
+    font-size:18px; line-height:1;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+  }
+  .lightbox-hint{
+    position:fixed; bottom:22px; left:50%; transform:translateX(-50%);
+    z-index:101;
+    font-family:'IBM Plex Mono', monospace; font-size:12px;
+    color:var(--muted);
+    background:rgba(18,25,36,0.85);
+    border:1px solid var(--line);
+    padding:6px 14px; border-radius:20px;
+    pointer-events:none;
+  }
+
   @media (max-width:640px){
     .hero-top{ flex-direction:column; }
     .candles{ align-self:flex-end; }
@@ -429,5 +484,70 @@
   </footer>
 
 </div>
+
+<div class="lightbox" id="lightbox">
+  <div class="lightbox-close" id="lightboxClose">&times;</div>
+  <div class="lightbox-stage" id="lightboxStage">
+    <img id="lightboxImg" src="" alt="">
+  </div>
+  <div class="lightbox-hint">Nhấn vào ảnh để zoom · Esc hoặc nút X để đóng</div>
+</div>
+
+<script>
+  (function(){
+    var lightbox = document.getElementById('lightbox');
+    var stage = document.getElementById('lightboxStage');
+    var img = document.getElementById('lightboxImg');
+    var closeBtn = document.getElementById('lightboxClose');
+
+    function openLightbox(src, alt){
+      img.src = src;
+      img.alt = alt || '';
+      stage.classList.remove('zoomed');
+      stage.scrollTop = 0;
+      stage.scrollLeft = 0;
+      lightbox.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeLightbox(){
+      lightbox.classList.remove('open');
+      stage.classList.remove('zoomed');
+      document.body.style.overflow = '';
+      img.src = '';
+    }
+
+    document.querySelectorAll('figure img').forEach(function(el){
+      el.addEventListener('click', function(){
+        openLightbox(el.getAttribute('src'), el.getAttribute('alt'));
+      });
+    });
+
+    stage.addEventListener('click', function(e){
+      if(e.target !== img){ return; }
+      var wasZoomed = stage.classList.contains('zoomed');
+      if(!wasZoomed){
+        var rect = img.getBoundingClientRect();
+        var offsetX = e.clientX - rect.left;
+        var offsetY = e.clientY - rect.top;
+        stage.classList.add('zoomed');
+        requestAnimationFrame(function(){
+          stage.scrollLeft = offsetX * 2.2 - stage.clientWidth / 2;
+          stage.scrollTop = offsetY * 2.2 - stage.clientHeight / 2;
+        });
+      } else {
+        stage.classList.remove('zoomed');
+      }
+    });
+
+    closeBtn.addEventListener('click', closeLightbox);
+    lightbox.addEventListener('click', function(e){
+      if(e.target === lightbox){ closeLightbox(); }
+    });
+    document.addEventListener('keydown', function(e){
+      if(e.key === 'Escape'){ closeLightbox(); }
+    });
+  })();
+</script>
 </body>
 </html>

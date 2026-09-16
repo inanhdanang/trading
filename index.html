@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chiến lược Supertrend cải tiến — Cấu hình A</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root{
+    --bg:#0c1117;
+    --panel:#121924;
+    --panel-2:#161f2c;
+    --line:#233042;
+    --text:#e7edf5;
+    --muted:#8c9bb0;
+    --buy:#2fbf8f;
+    --buy-dim:#1a4a3d;
+    --sell:#ef5b5b;
+    --sell-dim:#4a2626;
+    --amber:#e0a94a;
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'IBM Plex Sans', sans-serif;
+    line-height:1.65;
+    font-size:16px;
+  }
+  ::selection{ background:var(--amber); color:#101418; }
+
+  h1,h2,h3{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600;
+    letter-spacing:-0.01em;
+    color:#f4f7fb;
+  }
+
+  a{ color:var(--amber); }
+
+  .wrap{
+    max-width:760px;
+    margin:0 auto;
+    padding:0 24px;
+  }
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    position:sticky; top:0; z-index:20;
+    background:rgba(12,17,23,0.88);
+    backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);
+  }
+  .topbar-inner{
+    max-width:760px; margin:0 auto; padding:14px 24px;
+    display:flex; align-items:center; gap:18px;
+    overflow-x:auto; white-space:nowrap;
+    scrollbar-width:none;
+  }
+  .topbar-inner::-webkit-scrollbar{display:none;}
+  .topbar a{
+    color:var(--muted); text-decoration:none; font-size:13.5px;
+    font-family:'IBM Plex Mono', monospace;
+  }
+  .topbar a:hover{ color:var(--text); }
+  .topbar .mark{
+    font-family:'Space Grotesk',sans-serif; font-weight:700; color:var(--text);
+    font-size:14px; flex:none;
+  }
+  .dot{ color:var(--amber); }
+
+  /* ---------- hero ---------- */
+  .hero{
+    padding:64px 0 40px;
+    border-bottom:1px solid var(--line);
+  }
+  .hero-top{
+    display:flex; align-items:flex-start; justify-content:space-between; gap:28px;
+  }
+  .hero h1{
+    font-size:clamp(30px,5vw,42px);
+    line-height:1.12;
+    margin:0 0 10px;
+    max-width:520px;
+  }
+  .hero .sub{
+    font-family:'IBM Plex Mono', monospace;
+    color:var(--amber);
+    font-size:14px;
+    margin:0 0 22px;
+  }
+  .hero p.lead{
+    color:var(--muted);
+    max-width:540px;
+    font-size:15.5px;
+    margin:0;
+  }
+  .candles{ flex:none; margin-top:6px; }
+
+  .callout{
+    margin-top:28px;
+    padding:16px 18px;
+    border:1px solid var(--line);
+    border-left:3px solid var(--amber);
+    background:var(--panel);
+    border-radius:4px;
+    font-size:14.5px;
+    color:var(--muted);
+  }
+  .callout strong{ color:var(--text); }
+  .callout + .callout{ margin-top:12px; }
+  .callout.info{ border-left-color:#5a7ba6; }
+
+  /* ---------- sections ---------- */
+  section{
+    padding:52px 0;
+    border-bottom:1px solid var(--line);
+  }
+  section:last-of-type{ border-bottom:none; }
+
+  .kicker{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12.5px;
+    color:var(--muted);
+    margin:0 0 6px;
+  }
+  h2{
+    font-size:24px;
+    margin:0 0 22px;
+    display:flex; align-items:baseline; gap:10px;
+  }
+  h2 .num{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:15px;
+    color:var(--amber);
+    font-weight:500;
+  }
+
+  p{ margin:0 0 14px; color:#cdd8e5; }
+  p:last-child{ margin-bottom:0; }
+
+  /* setup table */
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:14.5px;
+    margin:8px 0 4px;
+  }
+  th{
+    text-align:left;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11.5px;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    color:var(--muted);
+    font-weight:500;
+    padding:10px 12px;
+    border-bottom:1px solid var(--line);
+  }
+  td{
+    padding:12px 12px;
+    border-bottom:1px solid var(--line);
+    color:#d5dfeb;
+    vertical-align:top;
+  }
+  tr:last-child td{ border-bottom:none; }
+  td.mono, th.mono{ font-family:'IBM Plex Mono', monospace; }
+
+  /* condition list */
+  .conditions{ list-style:none; margin:18px 0; padding:0; }
+  .conditions li{
+    display:flex; gap:14px; padding:14px 0;
+    border-top:1px solid var(--line);
+  }
+  .conditions li:first-child{ border-top:none; }
+  .conditions .badge{
+    flex:none; width:26px; height:26px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'IBM Plex Mono', monospace; font-size:13px; font-weight:500;
+    border:1px solid var(--line);
+    margin-top:1px;
+  }
+  .buy .badge{ color:var(--buy); border-color:var(--buy-dim); background:rgba(47,191,143,0.08); }
+  .sell .badge{ color:var(--sell); border-color:var(--sell-dim); background:rgba(239,91,91,0.08); }
+  .conditions strong{ color:var(--text); }
+
+  .side-tag{
+    display:inline-block; font-family:'IBM Plex Mono', monospace; font-size:12px;
+    padding:3px 9px; border-radius:20px; margin-bottom:16px;
+  }
+  .side-tag.buy{ color:var(--buy); background:rgba(47,191,143,0.1); border:1px solid var(--buy-dim); }
+  .side-tag.sell{ color:var(--sell); background:rgba(239,91,91,0.1); border:1px solid var(--sell-dim); }
+
+  /* image gallery */
+  .shots{
+    display:flex; gap:18px; overflow-x:auto; padding:22px 0 6px;
+    scrollbar-width:thin;
+  }
+  figure{
+    margin:0; flex:none; width:230px;
+  }
+  figure img{
+    width:100%; display:block; border-radius:8px;
+    border:1px solid var(--line);
+  }
+  figcaption{
+    font-size:12.5px; color:var(--muted); margin-top:10px; line-height:1.5;
+  }
+  figcaption .real{ color:var(--buy); font-family:'IBM Plex Mono', monospace; font-size:11px; }
+  figcaption .illus{ color:var(--muted); font-family:'IBM Plex Mono', monospace; font-size:11px; }
+
+  /* case grid section 5 */
+  .cases{ margin:8px 0; }
+  .case{
+    display:grid; grid-template-columns:32px 1fr 130px;
+    gap:16px; padding:16px 0; border-top:1px solid var(--line);
+    align-items:start; font-size:14.5px;
+  }
+  .cases .case:first-child{ border-top:none; }
+  .case .n{ font-family:'IBM Plex Mono', monospace; color:var(--muted); }
+  .case .action{
+    font-family:'IBM Plex Mono', monospace; font-size:12px;
+    color:var(--sell); text-align:right;
+  }
+
+  /* changelog */
+  .log{ margin:8px 0; }
+  .log-item{
+    display:flex; gap:16px; padding:16px 0; border-top:1px solid var(--line);
+  }
+  .log-item:first-child{ border-top:none; }
+  .ver{
+    flex:none; width:96px;
+    font-family:'IBM Plex Mono', monospace;
+    color:var(--amber); font-size:13px; padding-top:2px;
+  }
+  .log-item.current .ver{ color:var(--buy); }
+
+  footer{
+    padding:36px 0 60px;
+    color:var(--muted);
+    font-size:13px;
+  }
+
+  /* ---------- lightbox ---------- */
+  figure img{ cursor:zoom-in; }
+
+  .lightbox{
+    position:fixed; inset:0; z-index:100;
+    background:rgba(6,9,13,0.92);
+    display:none;
+    align-items:center; justify-content:center;
+    overflow:hidden;
+  }
+  .lightbox.open{ display:flex; }
+  .lightbox-stage{
+    width:100%; height:100%;
+    display:flex; align-items:center; justify-content:center;
+    overflow:auto;
+    cursor:zoom-in;
+    touch-action:pan-x pan-y;
+  }
+  .lightbox-stage.zoomed{ cursor:zoom-out; align-items:flex-start; justify-content:flex-start; }
+  .lightbox img{
+    max-width:min(90vw,560px);
+    max-height:85vh;
+    border-radius:6px;
+    border:1px solid var(--line);
+    user-select:none;
+    -webkit-user-drag:none;
+    transition:max-width .18s ease, max-height .18s ease;
+  }
+  .lightbox-stage.zoomed img{
+    max-width:none; max-height:none;
+    width:auto; height:auto;
+    transform:scale(2.2);
+    transform-origin:top left;
+  }
+  .lightbox-close{
+    position:fixed; top:20px; right:24px; z-index:101;
+    width:38px; height:38px; border-radius:50%;
+    border:1px solid var(--line);
+    background:var(--panel);
+    color:var(--text);
+    font-size:18px; line-height:1;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+  }
+  .lightbox-hint{
+    position:fixed; bottom:22px; left:50%; transform:translateX(-50%);
+    z-index:101;
+    font-family:'IBM Plex Mono', monospace; font-size:12px;
+    color:var(--muted);
+    background:rgba(18,25,36,0.85);
+    border:1px solid var(--line);
+    padding:6px 14px; border-radius:20px;
+    pointer-events:none;
+  }
+
+  /* case gallery (section 05b) */
+  .case-card{
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:var(--panel);
+    padding:18px;
+    margin:18px 0;
+  }
+  .case-card img{
+    width:100%; display:block; border-radius:6px;
+    border:1px solid var(--line);
+    margin-bottom:14px;
+    cursor:zoom-in;
+  }
+  .case-card h4{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:15px; margin:0 0 4px; color:#f4f7fb;
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  }
+  .tag{
+    font-family:'IBM Plex Mono', monospace; font-size:11px;
+    padding:3px 9px; border-radius:20px; letter-spacing:.03em;
+  }
+  .tag.good{ color:var(--buy); background:rgba(47,191,143,0.1); border:1px solid var(--buy-dim); }
+  .tag.caution{ color:var(--amber); background:rgba(224,169,74,0.1); border:1px solid #6b5326; }
+  .tag.bad{ color:var(--sell); background:rgba(239,91,91,0.1); border:1px solid var(--sell-dim); }
+  .case-card .market{ font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--muted); margin:0 0 12px; }
+  .case-card dl{ margin:0; }
+  .case-card dt{
+    font-family:'IBM Plex Mono', monospace; font-size:11px; text-transform:uppercase;
+    color:var(--muted); margin:10px 0 3px;
+  }
+  .case-card dt:first-child{ margin-top:0; }
+  .case-card dd{ margin:0; font-size:14px; color:#d5dfeb; }
+
+  @media (max-width:640px){
+    .hero-top{ flex-direction:column; }
+    .candles{ align-self:flex-end; }
+    .case{ grid-template-columns:24px 1fr; }
+    .case .action{ grid-column:2; text-align:left; margin-top:2px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <span class="mark">Supertrend<span class="dot">·</span>A</span>
+    <a href="#setup">Cài đặt</a>
+    <a href="#long">Mua</a>
+    <a href="#short">Bán</a>
+    <a href="#process">Vào·Giữ·Thoát</a>
+    <a href="#risk">Quản lý vốn</a>
+    <a href="#skip">Không vào lệnh</a>
+    <a href="#gallery">Ảnh thực tế</a>
+    <a href="#why">Vì sao 2 lớp lọc</a>
+    <a href="#log">Backtest</a>
+    <a href="#changelog">Lịch sử</a>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <section class="hero">
+    <div class="hero-top">
+      <div>
+        <h1>Chiến lược Supertrend cải tiến</h1>
+        <p class="sub">v1.6 · ST1 + ST2 + QQE MOD + RSI HISTOGRAM + HVI_LB</p>
+        <p class="lead">Bộ quy tắc giao dịch dựa trên chỉ báo <code>xSupertrend_ST2QQE_HVI_v1.6</code>: 2 đường Supertrend (1 chậm xác định xu hướng chính, 1 nhanh làm điểm vào lệnh) được lọc qua 2 lớp xác nhận nối tiếp — QQE MOD + HVI_LB, rồi đến RSI Histogram — trước khi nhãn Buy/Sell thật sự xuất hiện trên chart.</p>
+      </div>
+      <svg class="candles" width="120" height="110" viewBox="0 0 120 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <line x1="14" y1="18" x2="14" y2="42" stroke="#ef5b5b" stroke-width="2"/>
+        <rect x="9" y="24" width="10" height="12" fill="#ef5b5b"/>
+        <line x1="34" y1="30" x2="34" y2="60" stroke="#ef5b5b" stroke-width="2"/>
+        <rect x="29" y="36" width="10" height="16" fill="#ef5b5b"/>
+        <line x1="54" y1="46" x2="54" y2="66" stroke="#2fbf8f" stroke-width="2"/>
+        <rect x="49" y="48" width="10" height="10" fill="#2fbf8f"/>
+        <line x1="74" y1="20" x2="74" y2="58" stroke="#2fbf8f" stroke-width="2"/>
+        <rect x="69" y="24" width="10" height="24" fill="#2fbf8f"/>
+        <line x1="94" y1="8" x2="94" y2="40" stroke="#2fbf8f" stroke-width="2"/>
+        <rect x="89" y="10" width="10" height="20" fill="#2fbf8f"/>
+        <path d="M6 50 L30 44 L50 56 L70 30 L98 14" stroke="#e0a94a" stroke-width="1.4" stroke-dasharray="3 3" fill="none"/>
+      </svg>
+    </div>
+
+    <div class="callout">
+      <strong>Lưu ý quan trọng —</strong> đây là tài liệu tổng hợp mang tính giáo dục và ghi chú cá nhân, không phải lời khuyên đầu tư. Kết quả backtest trong quá khứ không đảm bảo hiệu suất tương lai. Luôn tự kiểm chứng chiến lược bằng backtest / forward-test trước khi dùng vốn thật.
+    </div>
+    <div class="callout info">
+      <strong>Về hình ảnh minh họa —</strong> ảnh đánh dấu "ảnh thực tế" được crop trực tiếp từ chart giao dịch thật (TradingView/OANDA) đã backtest, đánh số 1-2-3 chỉ rõ từng điều kiện. Ảnh còn lại (tín hiệu bị trễ) là ảnh dựng lại mang tính minh họa, không phải chart thật.
+    </div>
+  </section>
+
+  <section id="setup">
+    <p class="kicker">01</p>
+    <h2>Cài đặt chỉ báo</h2>
+    <p>Chỉ báo thật (<code>xSupertrend_ST2QQE_HVI_v1.6</code>) gồm 5 lớp chạy nối tiếp nhau — không phải 3 chỉ báo song song. ST1 cho bối cảnh xu hướng, ST2 phát tín hiệu thô, rồi tín hiệu thô đó phải "sống sót" qua 2 lớp lọc trước khi được vẽ thành nhãn Buy/Sell.</p>
+    <table>
+      <tr><th>Lớp</th><th>Vai trò</th><th>Cài đặt mặc định</th></tr>
+      <tr><td><strong>ST1</strong> (Supertrend chậm)</td><td>Xu hướng chính / bối cảnh — đường xanh dương (tăng) hoặc cam (giảm) trên nến</td><td class="mono">ATR Period 10, Mult 6</td></tr>
+      <tr><td><strong>ST2</strong> (Supertrend nhanh)</td><td>Nguồn phát tín hiệu Buy/Sell thô — vùng tô xanh lá/đỏ quanh nến</td><td class="mono">ATR Period 10, Mult 4</td></tr>
+      <tr><td><strong>Lọc 1 — QQE MOD</strong></td><td>Xác nhận động lượng. Pane "ST2+QQE": cột xanh dương/hồng = đạt ngưỡng, cột xám = trung tính</td><td>Phải cùng chiều với ST2 trong tối đa <span class="mono">3 nến</span> kể từ nến tín hiệu, kèm HVI_LB cùng màu</td></tr>
+      <tr><td><strong>Lọc 1 — HVI_LB</strong></td><td>Xác nhận khối lượng thật (không phải tăng/giảm ảo). Pane "HVI_LB"</td><td class="mono">Length 200, Divisor 1.5</td></tr>
+      <tr><td><strong>Lọc 2 — RSI Histogram</strong></td><td>Xác nhận cuối, dùng RSI làm mượt KAMA. Pane "RSI Histogram": cột xanh = giữ Buy, đỏ = giữ Sell</td><td>Chỉ hợp lệ nếu cột vừa đổi màu trong <span class="mono">≤5 nến</span> gần nhất, và xác nhận trong tối đa <span class="mono">3 nến</span></td></tr>
+    </table>
+    <p>Nói cách khác: <strong>ST2 báo trước, QQE MOD + HVI_LB gật đầu lần 1, RSI Histogram gật đầu lần 2 — mất một trong hai cái gật đầu, tín hiệu bị huỷ và không có nhãn Buy/Sell nào xuất hiện trên chart cả.</strong> Vì vậy mọi nhãn Buy/Sell nhìn thấy trên chart trong tài liệu này đều đã qua đủ 2 lớp lọc — nhưng "qua được bộ lọc" không đồng nghĩa "chắc thắng", xem mục 02–05 và mục Ảnh thực tế bên dưới.</p>
+  </section>
+
+  <section id="long">
+    <p class="kicker">02</p>
+    <h2>Quy tắc vào lệnh <span class="num">MUA</span></h2>
+    <span class="side-tag buy">LONG</span>
+    <p>Không cần tự đếm điều kiện — nhãn <strong>Buy</strong> chỉ hiện trên chart khi chỉ báo đã tự xác nhận đủ cả 2 lớp lọc. Việc của người vào lệnh là <strong>đọc bối cảnh ST1</strong> trước khi bấm lệnh, theo đúng thứ tự:</p>
+    <ol class="conditions buy">
+      <li><span class="badge">1</span><span><strong>ST2 đảo chiều sang tăng</strong> — vùng tô quanh nến chuyển xanh lá, đây là tín hiệu thô.</span></li>
+      <li><span class="badge">2</span><span><strong>QQE MOD + HVI_LB cùng xác nhận trong ≤3 nến</strong> — pane "ST2+QQE" ra cột xanh dương/hồng đạt ngưỡng, đồng thời pane "HVI_LB" ra cột xanh.</span></li>
+      <li><span class="badge">3</span><span><strong>RSI Histogram xác nhận thêm, còn "tươi" (≤5 nến kể từ khi đổi màu)</strong> — nếu qua được cả 2 lớp, nhãn <strong>Buy</strong> mới xuất hiện.</span></li>
+      <li><span class="badge">✓</span><span><strong>Kiểm tra bối cảnh ST1 trước khi vào:</strong> ưu tiên nhất là Buy xuất hiện khi ST1 đã đang ở trạng thái tăng, hoặc khi ST1 đang giảm nhưng gần cuối chu kỳ (giá đang lình xình sát đường ST1, chuẩn bị đổi màu) — xem quy tắc pacing ở mục 02b.</span></li>
+    </ol>
+
+    <div class="shots">
+      <figure>
+        <img src="images/real-buy-example-1.png" alt="Ảnh thực tế vào lệnh mua 1">
+        <figcaption><span class="real">ẢNH THỰC TẾ</span><br>Vàng (XAU/USD), khung 1 phút — cả 3 điều kiện khớp đúng tại cùng 1 cây nến: Supertrend chuyển xanh (1), ST2+RSI chuyển xanh (2), HVI_LB có cột xanh cao vọt xác nhận (3).</figcaption>
+      </figure>
+      <figure>
+        <img src="images/real-buy-example-2.png" alt="Ảnh thực tế vào lệnh mua 2">
+        <figcaption><span class="real">ẢNH THỰC TẾ</span><br>Phiên giao dịch khác — cùng bộ 3 điều kiện lặp lại chính xác, cho thấy tính nhất quán của quy tắc.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section id="short">
+    <p class="kicker">03</p>
+    <h2>Quy tắc vào lệnh <span class="num">BÁN</span></h2>
+    <span class="side-tag sell">SHORT</span>
+    <p>Ngược lại hoàn toàn với lệnh mua, cùng cơ chế 2 lớp lọc:</p>
+    <ol class="conditions sell">
+      <li><span class="badge">1</span><span><strong>ST2 đảo chiều sang giảm</strong> — vùng tô quanh nến chuyển đỏ, tín hiệu thô.</span></li>
+      <li><span class="badge">2</span><span><strong>QQE MOD + HVI_LB cùng xác nhận trong ≤3 nến</strong> — pane "ST2+QQE" ra cột hồng đạt ngưỡng âm, pane "HVI_LB" ra cột đỏ.</span></li>
+      <li><span class="badge">3</span><span><strong>RSI Histogram xác nhận thêm, còn "tươi" (≤5 nến)</strong> — qua hết mới hiện nhãn <strong>Sell</strong>.</span></li>
+      <li><span class="badge">✓</span><span><strong>Kiểm tra bối cảnh ST1:</strong> ưu tiên Sell khi ST1 đã giảm, hoặc khi ST1 đang tăng nhưng gần cuối chu kỳ. Sell xuất hiện giữa một chu kỳ ST1 tăng còn mạnh — như ảnh minh hoạ ở mục Ảnh thực tế — thường là tín hiệu yếu, dễ bị quét ngược trở lại.</span></li>
+    </ol>
+
+    <div class="shots">
+      <figure>
+        <img src="images/real-sell-example-1.png" alt="Ảnh thực tế vào lệnh bán">
+        <figcaption><span class="real">ẢNH THỰC TẾ</span><br>Vàng (XAU/USD), khung 1 phút — cả 3 điều kiện khớp đúng tại cùng 1 cây nến: Supertrend chuyển đỏ (1), ST2+RSI chuyển đỏ (2), HVI_LB nghiêng đỏ xác nhận (3).</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section id="process">
+    <p class="kicker">02b</p>
+    <h2>Quy trình 3 bước <span class="num">VÀO · GIỮ · THOÁT</span></h2>
+    <p>Đây là phần quan trọng nhất — chỉ báo chỉ cho điểm vào, còn giữ lệnh bao lâu và thoát khi nào là phần con người phải tự quyết theo bối cảnh ST1. Toàn bộ nội dung dưới đây lấy trực tiếp từ bảng ghi chú gắn sẵn trong chỉ báo (5 dòng "GHI CHÚ GIAO DỊCH" ở góc chart).</p>
+
+    <h3 style="font-size:16px;margin:22px 0 10px;">Bước 1 — Vào lệnh</h3>
+    <ul class="conditions">
+      <li class="buy"><span class="badge">1</span><span>Chỉ vào khi nhãn Buy/Sell đã hiện trên chart (đã qua đủ 2 lớp lọc, xem mục 01). Không tự vào lệnh sớm khi mới thấy ST2 đổi màu mà QQE MOD/HVI_LB/RSI Histogram chưa xác nhận — đó vẫn là tín hiệu thô, có thể bị huỷ trong vài nến tới.</span></li>
+      <li class="sell"><span class="badge">2</span><span>Nếu khoảng cách từ giá hiện tại đến biên ST2 &gt; 10$ (SL sẽ quá xa), <strong>không vào ngay</strong> — chờ giá hồi về gần biên ST2 rồi mới vào, đặt SL cách biên ST2 khoảng ~2$.</span></li>
+    </ul>
+
+    <h3 style="font-size:16px;margin:22px 0 10px;">Bước 2 — Giữ lệnh (pacing theo ST1)</h3>
+    <ul class="conditions">
+      <li class="buy"><span class="badge">3</span><span><strong>ST1 đang Sell (đường cam trên nến):</strong> không mở Buy mới mỗi lần ST2 chỉ nảy lên ngắt quãng giữa chu kỳ giảm — đó thường là hồi kỹ thuật trong downtrend. Chỉ Buy khi ST2 đổi màu xanh <em>gần cuối chu kỳ Sell của ST1</em> (giá bắt đầu lình xình sát đường ST1, chuẩn bị cắt lên).</span></li>
+      <li class="sell"><span class="badge">4</span><span><strong>ST1 đang Buy (đường xanh dương dưới nến):</strong> ngược lại, không mở Sell mới mỗi lần ST2 chỉ ngắt quãng giữa chu kỳ tăng. Chỉ Sell khi ST2 đổi màu đỏ gần cuối chu kỳ Buy của ST1.</span></li>
+    </ul>
+
+    <h3 style="font-size:16px;margin:22px 0 10px;">Bước 3 — Thoát lệnh</h3>
+    <ul class="conditions">
+      <li class="buy"><span class="badge">5</span><span><strong>Take profit</strong> nên chọn trong khoảng <span class="mono">10–15$</span> tính từ giá vào lệnh — không cố gồng thêm khi đã đạt vùng này trừ khi ST1 vẫn còn cách xa, chưa có dấu hiệu tạo đỉnh/đáy mới.</span></li>
+      <li class="sell"><span class="badge">6</span><span><strong>ST1 &amp; ST2 đi ngang dài</strong> (không mở rộng biên, nến nhỏ liên tục): đây là tín hiệu thoát chủ động — hoặc đóng lệnh non-tay, hoặc kéo SL về đúng giá Entry để bảo toàn vốn, không chờ chạm SL/TP mới xử lý.</span></li>
+    </ul>
+  </section>
+
+  <section id="risk">
+    <p class="kicker">04</p>
+    <h2>Quản lý vốn</h2>
+    <table>
+      <tr><td><strong>Stop loss</strong></td><td>Cách biên ST2 khoảng <span class="mono">~2$</span>. Nếu khoảng cách entry → biên ST2 vượt quá <span class="mono">10$</span>, không vào ngay mà chờ giá hồi về gần biên ST2 rồi mới đặt lệnh, để SL không bị quá rộng.</td></tr>
+      <tr><td><strong>Take profit</strong></td><td>Cố định trong khoảng <span class="mono">10–15$</span> tính từ entry — không dùng tỷ lệ R:R cố định, vì SL luôn được ràng theo cấu trúc ST2 chứ không theo % vốn.</td></tr>
+      <tr><td><strong>Pacing theo ST1</strong></td><td>Xem Bước 2 ở mục Vào·Giữ·Thoát — đây là phần quản lý vốn "mềm" quan trọng nhất, giúp tránh vào lệnh ngược dòng ở giữa một xu hướng ST1 còn mạnh.</td></tr>
+      <tr><td><strong>Thoát sớm khi đi ngang</strong></td><td>ST1 &amp; ST2 đi ngang dài → canh thoát lệnh hoặc kéo SL về Entry, không đợi lệnh tự chạm SL/TP.</td></tr>
+    </table>
+  </section>
+
+  <section id="skip">
+    <p class="kicker">05</p>
+    <h2>Những trường hợp không vào lệnh</h2>
+    <div class="cases">
+      <div class="case"><span class="n">01</span><span>ST2+RSI đổi màu nhưng HVI_LB không xác nhận cùng lúc.</span><span class="action">Bỏ qua tín hiệu, không chờ nến sau</span></div>
+      <div class="case"><span class="n">02</span><span>Giá đi ngang, nến nhỏ, lộn xộn (sideway).</span><span class="action">Không vào lệnh, dễ bị pullback quét stop loss</span></div>
+      <div class="case"><span class="n">03</span><span>Supertrend chưa đổi màu nhưng 2 chỉ báo còn lại đã đổi.</span><span class="action">Chưa đủ điều kiện, chờ Supertrend xác nhận</span></div>
+      <div class="case"><span class="n">04</span><span>Có tín hiệu ngược chiều Supertrend dù 2 chỉ báo còn lại mạnh.</span><span class="action">Không vào lệnh, ưu tiên xu hướng chính</span></div>
+      <div class="case"><span class="n">05</span><span>Nhãn Buy/Sell xuất hiện giữa chu kỳ ST1 ngược chiều còn "trẻ" (mới đổi màu vài nến, chưa lình xình gần đường ST1).</span><span class="action">Bỏ qua — chỉ là hồi kỹ thuật, xem mục Vào·Giữ·Thoát bước 2</span></div>
+    </div>
+
+    <div class="shots">
+      <figure>
+        <img src="images/invalid-signal-example.png" alt="Minh họa tín hiệu bị trễ">
+        <figcaption><span class="illus">ẢNH DỰNG LẠI</span><br>Trường hợp không nên vào lệnh — ST2+RSI đổi màu trễ 3 nến sau điểm Supertrend xác nhận, HVI_LB không có cột xác nhận đúng lúc. Tín hiệu nên bỏ qua, không chờ đợi để vào trễ.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section id="gallery">
+    <p class="kicker">05b</p>
+    <h2>Ảnh thực tế bổ sung — 8 phiên phân tích</h2>
+    <p>8 ảnh chụp trực tiếp từ chart thật (TradingView), chưa qua dựng lại, dùng để soi chiếu quy tắc <a href="#process">Vào · Giữ · Thoát</a> ở mục 02b. Nhãn Buy/Sell trong các ảnh này đều là tín hiệu <em>đã qua đủ 2 lớp lọc</em> của chỉ báo (mục 01) — nhưng "qua được bộ lọc" không có nghĩa mọi lệnh đều đáng vào ngay; đánh giá thêm dựa trên bối cảnh ST1 và diễn biến giá sau đó.</p>
+
+    <div class="case-card">
+      <img src="images/case-01-xau-buy-cuoi-chu-ky-sell.png" alt="XAU/USD — Buy gần cuối chu kỳ Sell ST1">
+      <h4>Ca 1 <span class="tag good">CHUẨN</span></h4>
+      <p class="market">XAU/USD · 1 phút · OANDA</p>
+      <dl>
+        <dt>Vào lệnh</dt><dd>Có 1 lệnh Sell nảy lên giữa vùng lình xình rồi bị đảo chiều gần như ngay lập tức — ví dụ điển hình của tín hiệu "trẻ", nên bỏ qua theo quy tắc ST1-pacing. Ngay sau đó là lệnh Buy thứ hai, rơi đúng vào lúc giá vừa thoát khỏi vùng đi ngang và ST1 chuẩn bị cắt lên — đây là điểm vào chuẩn.</dd>
+        <dt>Giữ lệnh</dt><dd>Sau lệnh Buy chuẩn, cả 3 pane phụ đồng thuận kéo dài: RSI Histogram giữ cột xanh liên tục, ST2+QQE giữ cột xanh dương, HVI_LB có cột cam/xanh xác nhận nhiều lần — không có tín hiệu đảo chiều nào xuất hiện trong suốt hơn 1 giờ tiếp theo nên giữ lệnh xuyên suốt là đúng.</dd>
+        <dt>Thoát lệnh</dt><dd>Tại thời điểm chụp ảnh xu hướng vẫn chưa có dấu hiệu suy yếu (chưa đi ngang, chưa đổi màu) — chưa có lý do để thoát, chỉ nên dời SL dần theo biên ST2 để bảo toàn lợi nhuận.</dd>
+      </dl>
+    </div>
+
+    <div class="case-card">
+      <img src="images/case-02-xau-sell-whipsaw-truoc-dao-chieu.png" alt="XAU/USD — chuỗi Sell trong downtrend, Sell cuối bị đảo chiều gấp">
+      <h4>Ca 2 <span class="tag caution">CẨN TRỌNG</span></h4>
+      <p class="market">XAU/USD · 1 phút · OANDA</p>
+      <dl>
+        <dt>Vào lệnh</dt><dd>Phiên giảm kéo dài với nhiều lệnh Sell hợp lệ nối tiếp nhau — các lệnh Sell ở giữa chu kỳ đều ổn vì đi cùng chiều ST1. Riêng lệnh Sell cuối cùng (sát mép phải ảnh) rơi đúng lúc giá đã giảm rất sâu và bắt đầu lình xình sát đường ST1 — đúng vùng "gần cuối chu kỳ" cần cẩn trọng chứ không tự động Sell tiếp.</dd>
+        <dt>Giữ lệnh</dt><dd>Với các lệnh Sell giữa chu kỳ: giữ tốt vì ST1 vẫn giảm mạnh. Với lệnh Sell cuối: đây chính là ví dụ cho quy tắc "SL cách biên ST2 ~2$" phát huy tác dụng — giá đảo chiều tăng mạnh ngay sau đó, SL hẹp giúp giới hạn lỗ thay vì gồng lệnh ngược xu hướng mới.</dd>
+        <dt>Thoát lệnh</dt><dd>Ngay khi thấy cột đảo chiều tăng mạnh phá vỡ chuỗi giảm dài, nên thoát chủ động các lệnh Sell còn mở thay vì chờ SL, vì đây là dấu hiệu chu kỳ ST1 giảm đã kết thúc.</dd>
+      </dl>
+    </div>
+
+    <div class="case-card">
+      <img src="images/case-03-xau-chuoi-tin-hieu-chuan.png" alt="XAU/USD — chuỗi Buy/Sell luân phiên bám sát các nhịp xu hướng">
+      <h4>Ca 3 <span class="tag good">CHUẨN</span></h4>
+      <p class="market">XAU/USD · 1 phút · OANDA</p>
+      <dl>
+        <dt>Vào lệnh</dt><dd>Ảnh minh hoạ rõ nhất cho quy tắc pacing: Buy đầu phiên bắt đúng đáy trước một nhịp tăng dài, Buy thứ hai xác nhận lại xu hướng sau một nhịp điều chỉnh nhỏ, Sell giữa ảnh bắt đúng đỉnh trước một nhịp giảm thật, và Buy cuối bắt đúng đáy của nhịp giảm đó trước khi giá phục hồi về cuối phiên.</dd>
+        <dt>Giữ lệnh</dt><dd>Mỗi lệnh đều được giữ xuyên suốt cả nhịp — không đóng sớm mỗi khi ST2 chỉ rung lắc nhẹ trong vùng tô cùng màu, vì ST1 (đường nền) trong toàn bộ giai đoạn này đi cùng chiều với lệnh đang giữ.</dd>
+        <dt>Thoát lệnh</dt><dd>Điểm thoát hợp lý là khi vùng tô đổi màu ngược (ST2 đảo chiều) — chính là lúc nhãn lệnh kế tiếp xuất hiện, cho thấy cơ chế "tín hiệu mới = điểm thoát lệnh cũ" hoạt động tốt trên chart này.</dd>
+      </dl>
+    </div>
+
+    <div class="case-card">
+      <img src="images/case-04-xau-giu-lenh-xu-huong-giam.png" alt="XAU/USD — nhiều Sell liên tiếp trong một xu hướng giảm dài">
+      <h4>Ca 4 <span class="tag caution">CẨN TRỌNG</span></h4>
+      <p class="market">XAU/USD · 1 phút · OANDA</p>
+      <dl>
+        <dt>Vào lệnh</dt><dd>Một lệnh Buy đơn lẻ xuất hiện ngay trước khi giá lao dốc mạnh nhất trong ảnh — đây là ví dụ cho việc tín hiệu đã qua đủ 2 lớp lọc kỹ thuật vẫn có thể sai nếu ST1 khung lớn hơn vẫn đang giảm rất dốc; cần đối chiếu thêm bảng đa khung thời gian (MTF) trước khi vào.</dd>
+        <dt>Giữ lệnh</dt><dd>Chuỗi Sell lặp lại nhiều lần khi giá tạo các đợt giảm — nền tảng ST1 giảm xuyên suốt nên đây là ví dụ tốt cho việc ưu tiên giữ vị thế Sell theo xu hướng chính thay vì đóng sớm ở mỗi nhịp hồi kỹ thuật.</dd>
+        <dt>Thoát lệnh</dt><dd>Vùng phục hồi ở nửa sau ảnh (giá tạo đáy và bắt đầu đi ngang/tăng nhẹ) là tín hiệu nên thoát các lệnh Sell còn lại hoặc kéo SL về entry, đúng quy tắc "ST1 &amp; ST2 đi ngang dài".</dd>
+      </dl>
+    </div>
+
+    <div class="case-card">
+      <img src="images/case-05-xau-nhieu-sell-lien-tiep.png" alt="XAU/USD — nhiều Sell liên tiếp, sau đó phục hồi mạnh cuối phiên">
+      <h4>Ca 5 <span class="tag caution">CẨN TRỌNG</span></h4>
+      <p class="market">XAU/USD · 1 phút · OANDA</p>
+      <dl>
+        <dt>Vào lệnh</dt><dd>Nhiều lệnh Sell rơi vào cùng một xu hướng giảm sâu kéo dài — các lệnh đầu chuỗi chất lượng tốt, nhưng càng về cuối chuỗi (giá càng giảm sâu, càng gần vùng ST1 có thể sắp đảo chiều) độ tin cậy càng giảm, nên ưu tiên các lệnh đầu chuỗi hơn là vào thêm ở mọi tín hiệu lặp lại.</dd>
+        <dt>Giữ lệnh</dt><dd>Trong đoạn giảm mạnh, giữ lệnh Sell ban đầu tốt hơn liên tục đóng-mở lại theo từng nhịp rung của ST2.</dd>
+        <dt>Thoát lệnh</dt><dd>Đợt phục hồi mạnh cuối phiên (giá tăng dựng đứng trở lại) là tín hiệu thoát rõ ràng — nếu còn giữ lệnh Sell tới thời điểm này mà chưa thoát thì rủi ro âm lệnh tăng nhanh.</dd>
+      </dl>
+    </div>
+
+    <div class="case-card">
+      <img src="images/case-06-xau-giam-dai-nhieu-nhip.png" alt="XAU/USD — xu hướng giảm dài nhiều nhịp, ST1 giảm xuyên suốt">
+      <h4>Ca 6 <span class="tag good">CHUẨN (cho lệnh Sell theo xu hướng)</span></h4>
+      <p class="market">XAU/USD · 1 phút · OANDA</p>
+      <dl>
+        <dt>Vào lệnh</dt><dd>Lệnh Buy đơn lẻ ở đầu ảnh diễn ra ngay trước một nhịp giảm mạnh khác — cùng bài học như Ca 4: tín hiệu ngược chiều ST1 khung chính cần thận trọng. Các lệnh Sell tiếp theo bám khá sát các đỉnh hồi kỹ thuật trong xu hướng giảm.</dd>
+        <dt>Giữ lệnh</dt><dd>Đây là ảnh minh hoạ tốt cho việc "giữ lệnh dài hơi" — xu hướng giảm kéo dài nhiều giờ với ST1 không đổi màu, nên các lệnh Sell theo xu hướng nên được giữ qua nhiều nhịp rung nhỏ của ST2 thay vì chốt non.</dd>
+        <dt>Thoát lệnh</dt><dd>Chỉ nên tính chuyện thoát khi thấy vùng đi ngang thật sự hình thành ở cuối ảnh (biên ST1/ST2 thu hẹp lại), không phải ở mỗi nhịp hồi kỹ thuật giữa chừng.</dd>
+      </dl>
+    </div>
+
+    <div class="case-card">
+      <img src="images/case-07-btc-sell-dau-xu-huong.png" alt="Bitcoin — Sell ngay đầu một xu hướng giảm mạnh">
+      <h4>Ca 7 <span class="tag good">CHUẨN</span></h4>
+      <p class="market">Bitcoin/USD · 1 phút · Coinbase</p>
+      <dl>
+        <dt>Vào lệnh</dt><dd>Lệnh Sell xuất hiện đúng tại đỉnh, ngay khi ST1 vừa chuyển sang trạng thái giảm — đây là dạng entry chuẩn nhất: tín hiệu ST2 trùng thời điểm với việc ST1 đổi màu, không phải Sell giữa chừng một xu hướng tăng.</dd>
+        <dt>Giữ lệnh</dt><dd>Giá giảm liên tục nhiều giờ sau đó; các lệnh Buy nhỏ xen giữa (nếu xuất hiện) chỉ là nhịp hồi và nên được xem như tín hiệu "chưa đủ điều kiện đảo chiều" chứ không phải lý do đóng lệnh Sell chính.</dd>
+        <dt>Thoát lệnh</dt><dd>Chốt lời theo vùng 10–15$ mỗi nhịp giảm rõ rệt (đơn vị BTC/USD lớn hơn XAU nên có thể cần scale-out từng phần thay vì chờ một TP cố định duy nhất), hoặc thoát khi RSI Histogram/ST2+QQE bắt đầu đổi màu bền vững.</dd>
+      </dl>
+    </div>
+
+    <div class="case-card">
+      <img src="images/case-08-btc-buy-sau-whipsaw.png" alt="Bitcoin — Buy sau một lệnh Sell bị đảo chiều nhanh">
+      <h4>Ca 8 <span class="tag caution">CẨN TRỌNG</span></h4>
+      <p class="market">Bitcoin/USD · 1 phút · Coinbase</p>
+      <dl>
+        <dt>Vào lệnh</dt><dd>Lệnh Sell đầu ảnh bị đảo chiều gần như ngay lập tức (whipsaw) — tương tự Ca 2, minh hoạ vì sao luôn cần đặt SL sát biên ST2. Hai lệnh Buy tiếp theo bắt đúng đáy trước nhịp tăng mạnh, là các entry chuẩn.</dd>
+        <dt>Giữ lệnh</dt><dd>Sau nhịp tăng mạnh, giá bước vào vùng đi ngang hẹp (nửa phải ảnh, biên ST2 gần như phẳng) — đúng kịch bản "ST1 &amp; ST2 đi ngang dài" trong quy tắc thoát lệnh.</dd>
+        <dt>Thoát lệnh</dt><dd>Ở vùng đi ngang cuối ảnh nên chủ động kéo SL về entry hoặc chốt một phần, thay vì tiếp tục gồng chờ TP 10–15$ trong lúc thị trường không còn xu hướng rõ ràng.</dd>
+      </dl>
+    </div>
+  </section>
+
+  <section id="why">
+    <p class="kicker">06</p>
+    <h2>Vì sao dùng 2 lớp lọc nối tiếp thay vì 1</h2>
+    <p><strong>Đính chính so với bản ghi chú cũ:</strong> ở bản <code>v1.6</code> thực tế, QQE MOD <em>không hề bị bỏ</em> — nó vẫn chạy đầy đủ trong file chỉ báo và là lớp lọc đầu tiên (cùng HVI_LB). RSI Histogram (bản làm mượt KAMA của tác giả dman103) được <strong>thêm vào như lớp lọc thứ hai</strong>, chạy sau khi QQE MOD + HVI_LB đã xác nhận — không phải thay thế cho nhau.</p>
+    <p>Lý do tách 2 lớp thay vì gộp chung: QQE MOD phản ứng nhanh với động lượng nhưng đôi khi "nhạy sớm" ở các cú rung ngắn (đặc biệt lúc thị trường đi ngang). RSI Histogram được làm mượt bằng KAMA nên bền hơn, ít nhiễu hơn, đóng vai trò "chốt chặn" cuối cùng — chỉ giữ tín hiệu nếu cột RSI Histogram vừa đổi màu trong 5 nến gần nhất (tức đang ở pha khởi đầu của một nhịp mới, không phải đã chạy được nửa chừng).</p>
+    <p>Nói ngắn gọn: QQE MOD + HVI_LB trả lời câu hỏi "có động lượng và khối lượng thật không?", còn RSI Histogram trả lời thêm câu hỏi "động lượng đó có còn mới, còn kịp vào lệnh không?". Hai lớp lọc độc lập giúp giảm tín hiệu giả tốt hơn một lớp duy nhất, đổi lại đôi khi vào trễ hơn vài nến so với đỉnh/đáy thật — đây là đánh đổi có chủ đích, không phải nhược điểm cần sửa.</p>
+  </section>
+
+  <section id="log">
+    <p class="kicker">07</p>
+    <h2>Nhật ký backtest</h2>
+    <p>Dùng bảng này để ghi lại kết quả mỗi lần backtest / forward-test, giúp so sánh hiệu suất theo thời gian.</p>
+    <table>
+      <tr>
+        <th>Ngày test</th><th>Cặp / khung thời gian</th><th>Số lệnh</th><th>Tỷ lệ thắng</th><th>Profit factor</th><th>Drawdown</th><th>Ghi chú</th>
+      </tr>
+      <tr><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+    </table>
+  </section>
+
+  <section id="changelog">
+    <p class="kicker">08</p>
+    <h2>Lịch sử thay đổi</h2>
+    <div class="log">
+      <div class="log-item">
+        <span class="ver">v1.0</span>
+        <span>Chiến lược Supertrend gốc (2 Supertrend) — win rate 56%, profit factor 1.91.</span>
+      </div>
+      <div class="log-item">
+        <span class="ver">v2.0</span>
+        <span>Thêm HVI_LB + QQE MOD thay 1 Supertrend — win rate 65%, profit factor 2.79.</span>
+      </div>
+      <div class="log-item">
+        <span class="ver">v3.0</span>
+        <span><strong>Cấu hình A</strong> — thay QQE MOD bằng ST2+RSI, đang trong giai đoạn backtest. Xem mục 07.</span>
+      </div>
+      <div class="log-item current">
+        <span class="ver">v1.6</span>
+        <span><strong>Đồng bộ với file chỉ báo thật</strong> — đính chính: QQE MOD không bị bỏ, chạy song song với RSI Histogram làm 2 lớp lọc nối tiếp (mục 01, 06). Thêm mục 02b "Vào · Giữ · Thoát" lấy từ bảng ghi chú gắn sẵn trong chỉ báo, và mục 05b với 8 ảnh chart thật phân tích chi tiết entry/giữ lệnh/thoát lệnh.</span>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Tài liệu được tổng hợp và biên soạn cho mục đích ghi chú cá nhân và tham khảo khi backtest chiến lược.
+  </footer>
+
+</div>
+
+<div class="lightbox" id="lightbox">
+  <div class="lightbox-close" id="lightboxClose">&times;</div>
+  <div class="lightbox-stage" id="lightboxStage">
+    <img id="lightboxImg" src="" alt="">
+  </div>
+  <div class="lightbox-hint">Nhấn vào ảnh để zoom · Esc hoặc nút X để đóng</div>
+</div>
+
+<script>
+  (function(){
+    var lightbox = document.getElementById('lightbox');
+    var stage = document.getElementById('lightboxStage');
+    var img = document.getElementById('lightboxImg');
+    var closeBtn = document.getElementById('lightboxClose');
+
+    function openLightbox(src, alt){
+      img.src = src;
+      img.alt = alt || '';
+      stage.classList.remove('zoomed');
+      stage.scrollTop = 0;
+      stage.scrollLeft = 0;
+      lightbox.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeLightbox(){
+      lightbox.classList.remove('open');
+      stage.classList.remove('zoomed');
+      document.body.style.overflow = '';
+      img.src = '';
+    }
+
+    document.querySelectorAll('figure img').forEach(function(el){
+      el.addEventListener('click', function(){
+        openLightbox(el.getAttribute('src'), el.getAttribute('alt'));
+      });
+    });
+
+    stage.addEventListener('click', function(e){
+      if(e.target !== img){ return; }
+      var wasZoomed = stage.classList.contains('zoomed');
+      if(!wasZoomed){
+        var rect = img.getBoundingClientRect();
+        var offsetX = e.clientX - rect.left;
+        var offsetY = e.clientY - rect.top;
+        stage.classList.add('zoomed');
+        requestAnimationFrame(function(){
+          stage.scrollLeft = offsetX * 2.2 - stage.clientWidth / 2;
+          stage.scrollTop = offsetY * 2.2 - stage.clientHeight / 2;
+        });
+      } else {
+        stage.classList.remove('zoomed');
+      }
+    });
+
+    closeBtn.addEventListener('click', closeLightbox);
+    lightbox.addEventListener('click', function(e){
+      if(e.target === lightbox){ closeLightbox(); }
+    });
+    document.addEventListener('keydown', function(e){
+      if(e.key === 'Escape'){ closeLightbox(); }
+    });
+  })();
+</script>
+</body>
+</html>
